@@ -109,8 +109,8 @@ Shadows: `--shadow-sm` (resting cards), `--shadow` (hover, planner, popovers), `
 ### Sheets & modals
 - Side sheet (`dialog.sheet`, `.wide` for forms): `.sheet-head` (eyebrow + display title + ✕), scrolling
   `.sheet-body`, sticky `.sheet-foot` (destructive left, Cancel + primary right).
-- Bottom sheet on phones (automatic). **Forms (add/edit) are full-screen on phones** so their top fields can't
-  sit above the visible screen.
+- Bottom sheet on phones (automatic). **The add/edit form and place details are full-screen on phones**
+  (full visible height), so nothing can sit above the visible screen. Short sheets (filters) stay bottom sheets.
 - **Only `.sheet-body` scrolls.** The head and foot are fixed: put a sheet's key information and primary actions
   in the head (e.g. the place details sheet shows name, address, status, price and Call/Book/Website/Directions there).
 - Size sheets with `dvh` (visible screen) and a `vh` fallback, never `vh` alone.

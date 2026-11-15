@@ -695,8 +695,9 @@ dialog.modal::backdrop { background: rgba(43, 34, 48, .4); backdrop-filter: blur
   dialog.sheet, dialog.sheet.wide {
     inset: auto 0 0 0; width: 100vw; height: auto; max-height: 92vh; max-height: 92dvh; border-radius: var(--r-lg) var(--r-lg) 0 0;
   }
-  /* Adding/editing is a full-screen form on phones, so the top fields can't end up above the screen. */
-  dialog#editDlg { inset: 0; height: 100vh; height: 100dvh; max-height: 100vh; max-height: 100dvh; border-radius: 0; }
+  /* The add/edit form and place details are full-screen on phones (the full visible height),
+     so nothing sits above the screen and the details get the whole page. */
+  dialog#editDlg, dialog#detailDlg { inset: 0; height: 100vh; height: 100dvh; max-height: 100vh; max-height: 100dvh; border-radius: 0; }
   dialog.sheet[open] { animation-name: sheetUp; }
   @keyframes sheetUp { from { transform: translateY(60px); opacity: 0; } to { transform: none; opacity: 1; } }
   .sheet-head { padding: 22px 20px 16px; }
