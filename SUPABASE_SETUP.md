@@ -50,24 +50,25 @@ node serve.js
 ```
 Open <http://localhost:5500>, choose **Create account**, confirm via the email, then sign in.
 
-## 6. Add the second family member (shared list)
-1. They open the app and create their own account (step 5). They get an empty workspace of their own.
-2. In **SQL Editor**, run this with both email addresses filled in:
-   ```sql
-   insert into public.workspace_members (workspace_id, user_id, role)
-   select w.id, member.id, 'editor'
-   from public.workspaces w
-   join auth.users owner  on owner.id = w.created_by
-   join auth.users member on member.email = 'THEIR_EMAIL_HERE'
-   where owner.email = 'YOUR_EMAIL_HERE'
-     and w.name = 'My places';
-   ```
-3. They reload the app and pick your list from the workspace menu in the top bar. The app remembers the
-   choice.
+## 6. Shared lists (invite family and friends)
+Needs [`supabase/004_shared_lists.sql`](supabase/004_shared_lists.sql) run once in the **SQL Editor**.
 
-## 7. Lock down sign-ups
-Once both accounts exist: **Authentication → Sign In / Providers → turn off "Allow new users to sign up"**.
-Nobody else can create an account, even if they find the URL.
+How it works: everyone has their own **My places**. A **shared list** shows every member's own places together
+(duplicates shown once, preferring the list creator's entry). Only the person who added a place can edit it;
+others can **Save to My places**. Switch lists from the profile button.
+
+1. Profile button → **New shared list** → name it → **Create and invite** → copy the link and send it.
+   Each link works once and expires after 7 days; make a new one per person.
+2. The other person opens the link, signs in with Google, and taps **Join list**.
+   - While Google sign-in is in **Testing** mode, add their Gmail under **Google Auth Platform → Audience →
+     Test users** first, or click **Publish app** there (basic sign-in needs no Google review).
+   - **Allow new users to sign up** must be on in Supabase for their first sign-in.
+3. Manage people from **Members** on the shared list: the creator can remove people or delete the list; others can
+   leave. Nobody loses places either way: they stay in each person's own list.
+
+## 7. Lock down sign-ups (optional)
+If you only ever want the people who already have accounts: **Authentication → Sign In / Providers → turn off
+"Allow new users to sign up"**. Turn it back on briefly whenever you invite someone new.
 
 ## 8. Google Places search (fill in a new entry from Google)
 Needs the Google Cloud set-up (Places API (New) enabled, a key restricted to it) and the key stored as the

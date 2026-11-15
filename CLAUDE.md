@@ -7,4 +7,8 @@
   Append `?demo` to the URL to test without touching real data.
 - Supabase: schema in `supabase/schema.sql` (re-runnable), Google Places proxy in `supabase/functions/places`.
   Secrets (Google key, OAuth secret, Supabase secret key) never go in the repo.
+- Lists: places always live in a user's **personal** list; a **shared** list shows its members' personal places
+  (deduplicated, creator's entry wins) and owns none itself. Only the place's owner can edit it. Access is enforced by
+  the RLS rules and functions in `supabase/004_shared_lists.sql`, not just the UI. Demo mode (`?demo`) includes a
+  pretend second member ("Sam") for testing shared lists.
 - Live site: GitHub Pages from `main` at https://mheiland17.github.io/where-the-food-at/.

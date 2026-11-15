@@ -284,6 +284,32 @@ textarea.input { height: auto; min-height: 110px; padding: 12px 14px; resize: ve
   background: none; text-align: left; font-size: 14px; color: var(--ink-2);
 }
 .menu-item:hover { background: var(--surface-2); }
+.menu-pop { max-height: calc(100vh - 90px); max-height: calc(100dvh - 90px); overflow-y: auto; min-width: 260px; }
+.menu-label { padding: 10px 12px 4px; font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.menu-note { padding: 6px 12px; font-size: 12px; color: var(--muted); }
+.menu-sep { height: 1px; background: var(--line); margin: 6px 0; }
+.list-item .li-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.list-item small { color: var(--muted); font-size: 12px; }
+.list-item[aria-current="true"] { background: var(--accent-50); color: var(--accent); font-weight: 600; }
+
+/* Current list, above the hero title */
+.list-bar { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 14px; margin-bottom: 16px; }
+.list-chip {
+  display: inline-flex; align-items: center; gap: 8px; min-height: var(--control-xxs); padding: 0 12px 0 14px;
+  border-radius: var(--r-pill); border: 1px solid var(--accent-100); background: var(--accent-50);
+  color: var(--accent); font-size: 14px; font-weight: 600;
+}
+.list-chip:hover { background: var(--accent-100); }
+.list-chip .ic { width: 16px; height: 16px; }
+.list-with { font-size: 14px; color: var(--muted); }
+.list-bar .link-btn { font-size: 14px; }
+
+/* Members list in the members modal */
+.member-list { list-style: none; margin: 18px 0 0; padding: 0; border-top: 1px solid var(--line); }
+.member-list li { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--line); }
+.m-info { flex: 1; min-width: 0; }
+.m-name { display: block; font-weight: 600; }
+.m-meta { display: block; font-size: 13px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 /* ════════════════════════════════════════════════════════════
    Auth
@@ -736,11 +762,11 @@ dialog.modal::backdrop { background: rgba(43, 34, 48, .4); backdrop-filter: blur
     <span class="logo-text">Where the <em>Food</em> At</span>
   </a>
   <div class="top-right">
-    <label id="wsWrap" hidden><span class="sr-only">Which list</span><select id="wsSelect" class="ws-select bare-select"></select></label>
     <details class="menu" id="userMenu" hidden>
-      <summary class="avatar-btn" aria-label="Account menu"><span id="userInitial">?</span></summary>
+      <summary class="avatar-btn" aria-label="Account and lists"><span id="userInitial">?</span></summary>
       <div class="menu-pop">
         <div class="menu-head"><small id="menuLabel">Signed in as</small><strong id="userEmail"></strong></div>
+        <div id="listMenu"></div>
         <button class="menu-item" id="resetDemoBtn" type="button" hidden><i data-ic="refresh"></i>Reset demo data</button>
         <button class="menu-item" id="signOutBtn" type="button" hidden><i data-ic="logout"></i>Sign out</button>
       </div>
@@ -784,6 +810,7 @@ dialog.modal::backdrop { background: rgba(43, 34, 48, .4); backdrop-filter: blur
 <!-- ═════════════════════════════ App ═════════════════════════════ -->
 <main id="appView" class="page" hidden>
   <section class="hero" aria-labelledby="heroTitle">
+    <div class="list-bar" id="listBar"></div>
     <h1 class="hero-title" id="heroTitle">Where shall we <em>eat</em>?</h1>
     <p class="hero-sub">Pick a spot, a time and how many of you there are. We'll show the saved places that fit.</p>
 
@@ -1252,6 +1279,64 @@ dialog.modal::backdrop { background: rgba(43, 34, 48, .4); backdrop-filter: blur
   </form>
 </dialog>
 
+<!-- ═════════════════════════════ Shared lists ═════════════════════════════ -->
+<dialog id="newListDlg" class="modal" aria-labelledby="newListTitle">
+  <p class="eyebrow">Shared list</p>
+  <h2 id="newListTitle">Start a shared list</h2>
+  <p class="help" style="margin:8px 0 20px">Everyone you invite sees each other's saved places here. Places stay in each person's own list, and only the person who added a place can edit it.</p>
+  <div class="field">
+    <label for="newListName">Name</label>
+    <input id="newListName" class="input" maxlength="60" placeholder="e.g. Family favourites" autocomplete="wtfa-no-autofill">
+  </div>
+  <p class="alert" id="newListErr" role="alert" hidden style="margin-top:16px"></p>
+  <div class="modal-actions">
+    <button type="button" class="btn btn-ghost" data-modal-close>Cancel</button>
+    <button type="button" class="btn btn-primary" id="newListGo">Create and invite</button>
+  </div>
+</dialog>
+
+<dialog id="inviteDlg" class="modal" aria-labelledby="inviteTitle">
+  <p class="eyebrow" id="inviteEyebrow">Shared list</p>
+  <h2 id="inviteTitle">Invite someone</h2>
+  <p class="help" style="margin:8px 0 20px">Send this link to one person. It works once and expires in 7 days. They'll sign in with Google, then join.</p>
+  <div class="field">
+    <label for="inviteLink">Invite link</label>
+    <div class="name-row">
+      <input id="inviteLink" class="input" readonly autocomplete="wtfa-no-autofill">
+      <button type="button" class="btn btn-soft" id="inviteCopy">Copy</button>
+    </div>
+  </div>
+  <p class="alert" id="inviteErr" role="alert" hidden style="margin-top:16px"></p>
+  <div class="modal-actions">
+    <button type="button" class="btn btn-ghost" data-modal-close>Done</button>
+    <button type="button" class="btn btn-primary" id="inviteShare" hidden>Share…</button>
+  </div>
+</dialog>
+
+<dialog id="membersDlg" class="modal" aria-labelledby="membersTitle">
+  <p class="eyebrow">Shared list</p>
+  <h2 id="membersTitle">Members</h2>
+  <ul class="member-list" id="memberList"></ul>
+  <p class="alert" id="membersErr" role="alert" hidden style="margin-top:16px"></p>
+  <div class="modal-actions">
+    <button type="button" class="btn btn-danger" id="membersLeave"></button>
+    <span style="flex:1"></span>
+    <button type="button" class="btn btn-ghost" data-modal-close>Close</button>
+    <button type="button" class="btn btn-primary" id="membersInvite">Invite someone</button>
+  </div>
+</dialog>
+
+<dialog id="joinDlg" class="modal" aria-labelledby="joinTitle">
+  <p class="eyebrow">You're invited</p>
+  <h2 id="joinTitle">Join a shared list?</h2>
+  <p class="help" id="joinText" style="margin-top:10px"></p>
+  <p class="alert" id="joinErr" role="alert" hidden style="margin-top:16px"></p>
+  <div class="modal-actions">
+    <button type="button" class="btn btn-ghost" id="joinLater">Not now</button>
+    <button type="button" class="btn btn-primary" id="joinGo">Join list</button>
+  </div>
+</dialog>
+
 <!-- ═════════════════════════════ Fill-in confirmation ═════════════════════════════ -->
 <dialog id="prefillDlg" class="modal" aria-labelledby="prefillTitle">
   <p class="eyebrow">Fill in from Google</p>
@@ -1301,6 +1386,8 @@ dialog.modal::backdrop { background: rgba(43, 34, 48, .4); backdrop-filter: blur
     refresh: '<path d="M3 12a9 9 0 0 1 15-6.7L21 8M21 3v5h-5M21 12a9 9 0 0 1-15 6.7L3 16M3 21v-5h5"/>',
     sparkle: '<path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M6 18l2.5-2.5M15.5 8.5 18 6"/>',
     check: '<path d="M20 6 9 17l-5-5"/>',
+    chevron: '<path d="m6 9 6 6 6-6"/>',
+    link: '<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>',
   };
   const ic = (name, cls = "") => `<svg class="ic ${cls}" viewBox="0 0 24 24" aria-hidden="true" focusable="false">${ICONS[name] || ""}</svg>`;
   document.querySelectorAll("i[data-ic]").forEach((el) => { el.outerHTML = ic(el.dataset.ic, el.className); });
@@ -1434,9 +1521,12 @@ dialog.modal::backdrop { background: rgba(43, 34, 48, .4); backdrop-filter: blur
   // ?demo in the URL forces demo mode (handy for trying things without touching real data).
   const DEMO = new URLSearchParams(location.search).has("demo") || !(cfg.supabaseUrl && cfg.supabaseKey);
   const sb = !DEMO && window.supabase ? window.supabase.createClient(cfg.supabaseUrl, cfg.supabaseKey) : null;
-  const DEMO_KEY = "wtfa-demo-places-v2";
+  const DEMO_KEY = "wtfa-demo-places-v3";
+  const DEMO_LISTS_KEY = "wtfa-demo-lists-v1";
+  const DEMO_ME = "demo-me";
   const WS_KEY = "wtfa-workspace";
   const SORT_KEY = "wtfa-sort";
+  const INVITE_KEY = "wtfa-pending-invite";
 
   function demoSeed() {
     const now = Date.now();
@@ -1486,31 +1576,125 @@ dialog.modal::backdrop { background: rgba(43, 34, 48, .4); backdrop-filter: blur
         public_rating: 4.4, our_rating: 4, parking_ease: 1, transport_ease: 2, tags: ["cocktails", "after dinner"] }),
       mk(6, { name: "Noodle Corner", category: "takeaway", suburb: "Doncaster", postcode: "3108",
         price_level: 1, meals_auto: false, meals: ["lunch", "dinner"], takeaway: true, delivery: true, public_rating: 3.9, tags: ["noodles", "quick"] }),
+      // A pretend second person ("Sam") so shared lists can be tried in demo mode. One is a duplicate of ours.
+      mk(7, { workspace_id: "demo-sam", name: "Golden Lantern Dumpling House", category: "restaurant", street: "12 Station St", suburb: "Box Hill", postcode: "3128",
+        phone: "03 9000 1111", price_level: 2, visited: true, our_rating: 4, notes: "Sam's copy: the pork buns are the best." }),
+      mk(8, { workspace_id: "demo-sam", name: "Pho Saigon Kitchen", category: "restaurant", street: "40 Carrington Rd", suburb: "Box Hill", postcode: "3128",
+        phone: "03 9000 6666", price_level: 1, max_group_size: 10, booking_method: "phone", alcohol: "byo", visited: true, our_rating: 5,
+        hours: Object.fromEntries(DAYS.map((d) => [d, d === "mon" ? [] : wk("10:30", "21:30")])),
+        parking_ease: 2, transport_ease: 3, tags: ["pho", "cheap eats"] }),
+      mk(9, { workspace_id: "demo-sam", name: "The Burke Arms", category: "pub", street: "300 Burke Rd", suburb: "Camberwell", postcode: "3124",
+        phone: "03 9000 8888", price_level: 2, max_group_size: 30, booking_method: "phone", alcohol: "licensed",
+        hours: Object.fromEntries(DAYS.map((d) => [d, wk("12:00", "23:00")])), parking_ease: 3, tags: ["sunday roast", "big groups"] }),
     ];
+  }
+  function demoLists() {
+    const raw = ls.get(DEMO_LISTS_KEY);
+    if (raw) { try { return JSON.parse(raw); } catch { /* reseed below */ } }
+    const lists = {
+      workspaces: [
+        { id: "demo", name: "My places", kind: "personal", created_by: DEMO_ME, created_at: "2026-01-01T00:00:00Z" },
+        { id: "demo-shared", name: "Family favourites", kind: "shared", created_by: DEMO_ME, created_at: "2026-01-02T00:00:00Z" },
+      ],
+      members: {
+        "demo-shared": [
+          { member_id: DEMO_ME, member_role: "owner", member_name: "Demo user", member_email: "you@example.com", personal_list: "demo" },
+          { member_id: "demo-sam", member_role: "editor", member_name: "Sam", member_email: "sam@example.com", personal_list: "demo-sam" },
+        ],
+      },
+    };
+    ls.set(DEMO_LISTS_KEY, JSON.stringify(lists));
+    return lists;
+  }
+  const saveDemoLists = (lists) => ls.set(DEMO_LISTS_KEY, JSON.stringify(lists));
+  function demoAllPlaces() {
+    const raw = ls.get(DEMO_KEY);
+    if (raw) { try { return JSON.parse(raw); } catch { /* reseed below */ } }
+    const seed = demoSeed();
+    ls.set(DEMO_KEY, JSON.stringify(seed));
+    return seed;
+  }
+  async function rpc(fn, args) {
+    const { data, error } = await sb.rpc(fn, args);
+    if (error) throw error;
+    return data;
   }
 
   const db = {
     async listWorkspaces() {
-      if (DEMO) return [{ id: "demo", name: "Demo list" }];
-      const { data, error } = await sb.from("workspaces").select("id, name, created_at").order("created_at");
+      if (DEMO) return demoLists().workspaces;
+      let { data, error } = await sb.from("workspaces").select("id, name, kind, created_by, created_at").order("created_at");
+      // Before supabase/004_shared_lists.sql has been run there's no "kind" column: treat every list as personal.
+      if (error && /kind/.test(error.message || "")) {
+        state.sharingReady = false;
+        ({ data, error } = await sb.from("workspaces").select("id, name, created_by, created_at").order("created_at"));
+      }
       if (error) throw error;
-      return data;
+      return data.map((w) => ({ kind: "personal", ...w }));
     },
     async listPlaces(wsId) {
-      if (DEMO) {
-        const raw = ls.get(DEMO_KEY);
-        if (raw) { try { return JSON.parse(raw); } catch { /* reseed below */ } }
-        const seed = demoSeed();
-        ls.set(DEMO_KEY, JSON.stringify(seed));
-        return seed;
-      }
+      if (DEMO) return demoAllPlaces().filter((p) => p.workspace_id === wsId);
       const { data, error } = await sb.from("places").select("*").eq("workspace_id", wsId).order("name");
       if (error) throw error;
       return data;
     },
+    // Places from several personal lists at once (a shared list's members).
+    async listPlacesIn(wsIds) {
+      if (DEMO) return demoAllPlaces().filter((p) => wsIds.includes(p.workspace_id));
+      const { data, error } = await sb.from("places").select("*").in("workspace_id", wsIds).order("name");
+      if (error) throw error;
+      return data;
+    },
+    async listMembers(wsId) {
+      if (DEMO) return demoLists().members[wsId] || [];
+      return (await rpc("list_members", { p_workspace: wsId })) || [];
+    },
+    async createSharedList(name) {
+      if (DEMO) {
+        const lists = demoLists();
+        const id = "demo-list-" + crypto.randomUUID().slice(0, 8);
+        lists.workspaces.push({ id, name, kind: "shared", created_by: DEMO_ME, created_at: new Date().toISOString() });
+        lists.members[id] = [lists.members["demo-shared"]?.[0] || { member_id: DEMO_ME, member_role: "owner", member_name: "Demo user", personal_list: "demo" }];
+        saveDemoLists(lists);
+        return id;
+      }
+      return rpc("create_shared_list", { p_name: name });
+    },
+    async createInvite(wsId) {
+      if (DEMO) return "demo-" + crypto.randomUUID().replace(/-/g, "");
+      return rpc("create_invite", { p_workspace: wsId });
+    },
+    async peekInvite(token) {
+      const rows = await rpc("peek_invite", { p_token: token });
+      return (rows || [])[0] || null;
+    },
+    async acceptInvite(token) { return rpc("accept_invite", { p_token: token }); },
+    async removeMember(wsId, userId) {
+      if (DEMO) {
+        const lists = demoLists();
+        lists.members[wsId] = (lists.members[wsId] || []).filter((m) => m.member_id !== userId);
+        saveDemoLists(lists);
+        return;
+      }
+      await rpc("remove_member", { p_workspace: wsId, p_user: userId });
+    },
+    async leaveList(wsId) {
+      if (DEMO) throw new Error("In demo mode you created every list, so delete it instead.");
+      await rpc("leave_list", { p_workspace: wsId });
+    },
+    async deleteSharedList(wsId) {
+      if (DEMO) {
+        const lists = demoLists();
+        lists.workspaces = lists.workspaces.filter((w) => w.id !== wsId);
+        delete lists.members[wsId];
+        saveDemoLists(lists);
+        return;
+      }
+      await rpc("delete_shared_list", { p_workspace: wsId });
+    },
     async save(place) {
       if (DEMO) {
-        const all = await db.listPlaces("demo");
+        const all = demoAllPlaces();
         const now = new Date().toISOString();
         let saved;
         if (place.id) {
@@ -1539,7 +1723,7 @@ dialog.modal::backdrop { background: rgba(43, 34, 48, .4); backdrop-filter: blur
     },
     async restore(place) {
       if (DEMO) {
-        const all = await db.listPlaces("demo");
+        const all = demoAllPlaces();
         all.push(place);
         ls.set(DEMO_KEY, JSON.stringify(all));
         return place;
@@ -1550,7 +1734,7 @@ dialog.modal::backdrop { background: rgba(43, 34, 48, .4); backdrop-filter: blur
     },
     async remove(id) {
       if (DEMO) {
-        ls.set(DEMO_KEY, JSON.stringify((await db.listPlaces("demo")).filter((p) => p.id !== id)));
+        ls.set(DEMO_KEY, JSON.stringify(demoAllPlaces().filter((p) => p.id !== id)));
         return;
       }
       const { error } = await sb.from("places").delete().eq("id", id);
@@ -1568,9 +1752,41 @@ dialog.modal::backdrop { background: rgba(43, 34, 48, .4); backdrop-filter: blur
   const NUM_KEYS = new Set(["day", "group", "price", "publicMin", "oursMin", "parkingMin", "transportMin"]);
   const state = {
     user: null, workspaces: [], wsId: null, places: [], loading: true,
+    personalWsId: null,   // the signed-in person's own list: where every place they add is saved
+    members: [],          // people in the current shared list
+    rawPlaces: [],        // shared view: everyone's places before duplicates are folded together
+    sharingReady: true,   // false until supabase/004_shared_lists.sql has been run
     f: emptyFilters(), nowActive: false, sort: ls.get(SORT_KEY) || "best",
     detailId: null, editingId: null,
   };
+
+  // ── Lists ──
+  const meId = () => (DEMO ? DEMO_ME : state.user?.id);
+  const currentList = () => state.workspaces.find((w) => w.id === state.wsId) || null;
+  const isSharedView = () => currentList()?.kind === "shared";
+  const listName = (w) => (w.id === state.personalWsId ? "My places" : w.name);
+  const isListOwner = (w) => !!w && w.created_by === meId();
+  // Only the person whose own list a place lives in can change it.
+  const canEdit = (p) => p.workspace_id === state.personalWsId;
+  const addedBy = (p) => {
+    const m = state.members.find((x) => x.personal_list === p.workspace_id);
+    return m ? (m.member_id === meId() ? "you" : m.member_name) : null;
+  };
+  // Two entries are "the same place" if they share a Google ID, or (typed in by hand) name + postcode.
+  const placeKey = (p) => (p.google_place_id ? `g:${p.google_place_id}` : `n:${norm(p.name)}|${p.postcode || norm(p.suburb) || ""}`);
+  const hasMyCopy = (p) => state.rawPlaces.some((x) => x.workspace_id === state.personalWsId && placeKey(x) === placeKey(p));
+  // In a shared list, duplicates show once: the list creator's entry wins, otherwise the earliest added.
+  function dedupePlaces(raw, ws) {
+    const creatorList = state.members.find((m) => m.member_id === ws.created_by)?.personal_list;
+    const groups = new Map();
+    for (const p of raw) {
+      const k = placeKey(p);
+      if (!groups.has(k)) groups.set(k, []);
+      groups.get(k).push(p);
+    }
+    return [...groups.values()].map((g) =>
+      g.find((p) => p.workspace_id === creatorList) || [...g].sort((a, b) => String(a.created_at).localeCompare(String(b.created_at)))[0]);
+  }
 
   // ══════════════════════════════════════════════════════════
   // Toasts
@@ -1679,8 +1895,11 @@ dialog.modal::backdrop { background: rgba(43, 34, 48, .4); backdrop-filter: blur
     $("#authView").hidden = !!state.user;
     $("#appView").hidden = !state.user;
     $("#fab").hidden = !state.user;
-    $("#wsWrap").hidden = true;
-    if (state.user) await loadWorkspaces();
+    if (!state.user && ls.get(INVITE_KEY)) authMessage("Sign in to join the shared list you were invited to.", "ok");
+    if (state.user) {
+      await loadWorkspaces();
+      await handlePendingInvite();
+    }
   }
 
   document.addEventListener("click", (e) => { const m = $("#userMenu"); if (m.open && !m.contains(e.target)) m.open = false; });
@@ -1701,7 +1920,8 @@ dialog.modal::backdrop { background: rgba(43, 34, 48, .4); backdrop-filter: blur
   // ══════════════════════════════════════════════════════════
   // Loading
   // ══════════════════════════════════════════════════════════
-  async function loadWorkspaces() {
+  // Loads the lists you're in. `preferId` picks which one to show (e.g. one you just created or joined).
+  async function loadWorkspaces(preferId) {
     try {
       state.workspaces = await db.listWorkspaces();
     } catch (err) {
@@ -1710,32 +1930,271 @@ dialog.modal::backdrop { background: rgba(43, 34, 48, .4); backdrop-filter: blur
     if (!state.workspaces.length) {
       return listError("No list found for this account", "Has supabase/schema.sql been run? It creates a list for every new user.");
     }
-    const remembered = ls.get(WS_KEY);
-    state.wsId = state.workspaces.some((w) => w.id === remembered) ? remembered : state.workspaces[0].id;
-    $("#wsSelect").innerHTML = state.workspaces.map((w) => `<option value="${esc(w.id)}">${esc(w.name)}</option>`).join("");
-    $("#wsSelect").value = state.wsId;
-    $("#wsWrap").hidden = state.workspaces.length < 2;
+    const personal = state.workspaces.filter((w) => w.kind !== "shared");
+    state.personalWsId = (personal.find((w) => w.created_by === meId()) || personal[0] || state.workspaces[0]).id;
+    const want = preferId || ls.get(WS_KEY);
+    state.wsId = state.workspaces.some((w) => w.id === want) ? want : state.personalWsId;
+    if (preferId) ls.set(WS_KEY, state.wsId);
+    renderLists();
     await loadPlaces();
   }
-  $("#wsSelect").addEventListener("change", async (e) => {
-    state.wsId = e.target.value;
-    ls.set(WS_KEY, state.wsId);
+  async function switchList(id) {
+    $("#userMenu").open = false;
+    if (id === state.wsId) return;
+    state.wsId = id;
+    ls.set(WS_KEY, id);
+    if (state.f.text || state.f.area) { state.f = emptyFilters(); state.nowActive = false; syncControls(); }
+    renderLists();
     await loadPlaces();
-  });
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
 
   async function loadPlaces() {
     state.loading = true;
     render();
     try {
-      state.places = await db.listPlaces(state.wsId);
+      const ws = currentList();
+      if (ws?.kind === "shared") {
+        // A shared list shows every member's own places, with duplicates folded together.
+        state.members = await db.listMembers(ws.id);
+        const lists = [...new Set(state.members.map((m) => m.personal_list).filter(Boolean))];
+        state.rawPlaces = lists.length ? await db.listPlacesIn(lists) : [];
+        state.places = dedupePlaces(state.rawPlaces, ws);
+      } else {
+        state.members = [];
+        state.places = await db.listPlaces(state.wsId);
+        state.rawPlaces = state.places;
+      }
     } catch (err) {
       state.loading = false;
       return listError("We couldn't load your places", err.message || String(err));
     }
     state.loading = false;
+    renderLists();
     refreshSuggestions();
     render();
   }
+
+  // ── List switcher (profile menu) and the current-list bar above the title ──
+  function renderLists() {
+    const shared = state.workspaces.filter((w) => w.kind === "shared");
+    const mine = state.workspaces.find((w) => w.id === state.personalWsId);
+    const item = (w) => `
+      <button type="button" class="menu-item list-item" data-ws="${esc(w.id)}" aria-current="${w.id === state.wsId}">
+        ${ic(w.kind === "shared" ? "users" : "pin")}<span class="li-name">${esc(listName(w))}</span>
+        ${w.kind === "shared" ? `<small>Shared</small>` : ""}${w.id === state.wsId ? ic("check") : ""}
+      </button>`;
+    $("#listMenu").innerHTML = `
+      <p class="menu-label">Your lists</p>
+      ${[mine, ...shared].filter(Boolean).map(item).join("")}
+      ${state.sharingReady
+        ? `<button type="button" class="menu-item" data-new-list>${ic("plus")}New shared list</button>`
+        : `<p class="menu-note">Shared lists need a quick database update (supabase/004_shared_lists.sql).</p>`}
+      <div class="menu-sep"></div>`;
+
+    const cur = currentList();
+    if (!cur) { $("#listBar").innerHTML = ""; return; }
+    let extra = "";
+    if (cur.kind === "shared") {
+      const others = state.members.filter((m) => m.member_id !== meId()).map((m) => m.member_name);
+      extra = `<span class="list-with">${others.length ? `with ${esc(listText(others))}` : "Just you so far"}</span>
+        <button type="button" class="link-btn" data-members>Members</button>
+        ${isListOwner(cur) ? `<button type="button" class="link-btn" data-invite>Invite</button>` : ""}`;
+    }
+    $("#listBar").innerHTML = `
+      <button type="button" class="list-chip" data-open-lists aria-haspopup="menu" title="Switch list">
+        ${ic(cur.kind === "shared" ? "users" : "pin")}<span>${esc(listName(cur))}</span>${ic("chevron")}
+      </button>${extra}`;
+  }
+  $("#listMenu").addEventListener("click", (e) => {
+    const ws = e.target.closest("[data-ws]")?.dataset.ws;
+    if (ws) return switchList(ws);
+    if (e.target.closest("[data-new-list]")) openNewList();
+  });
+  $("#listBar").addEventListener("click", (e) => {
+    if (e.target.closest("[data-open-lists]")) { e.stopPropagation(); $("#userMenu").open = true; return; }
+    if (e.target.closest("[data-members]")) return openMembers();
+    if (e.target.closest("[data-invite]")) return openInvite();
+  });
+
+  // ── Small modals: shared close behaviour ──
+  for (const dlg of $$("dialog.modal")) {
+    dlg.addEventListener("click", (e) => { if (e.target === dlg) dlg.close(); });
+    $$("[data-modal-close]", dlg).forEach((b) => b.addEventListener("click", () => dlg.close()));
+  }
+  const showModalErr = (id, err) => { const el = $(id); el.hidden = !err; el.textContent = err ? (err.message || String(err)) : ""; };
+
+  // ── New shared list ──
+  function openNewList() {
+    $("#userMenu").open = false;
+    $("#newListName").value = "";
+    showModalErr("#newListErr");
+    $("#newListDlg").showModal();
+    $("#newListName").focus();
+  }
+  $("#newListName").addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); $("#newListGo").click(); } });
+  $("#newListGo").addEventListener("click", async () => {
+    const name = $("#newListName").value.trim();
+    if (!name) { showModalErr("#newListErr", "Give the list a name."); $("#newListName").focus(); return; }
+    const btn = $("#newListGo");
+    btn.disabled = true;
+    try {
+      const id = await db.createSharedList(name);
+      $("#newListDlg").close();
+      await loadWorkspaces(id);
+      toast(`Created “${name}”`);
+      openInvite();
+    } catch (err) {
+      showModalErr("#newListErr", err);
+    } finally {
+      btn.disabled = false;
+    }
+  });
+
+  // ── Invite link ──
+  let currentInviteLink = "";
+  async function openInvite() {
+    const ws = currentList();
+    if (!ws || ws.kind !== "shared") return;
+    $("#userMenu").open = false;
+    if ($("#membersDlg").open) $("#membersDlg").close();
+    $("#inviteEyebrow").textContent = ws.name;
+    $("#inviteLink").value = "Creating a link…";
+    $("#inviteShare").hidden = true;
+    $("#inviteCopy").disabled = true;
+    showModalErr("#inviteErr");
+    $("#inviteDlg").showModal();
+    try {
+      const token = await db.createInvite(ws.id);
+      currentInviteLink = `${location.origin}${location.pathname}?invite=${encodeURIComponent(token)}`;
+      $("#inviteLink").value = currentInviteLink;
+      $("#inviteCopy").disabled = false;
+      $("#inviteShare").hidden = !navigator.share;
+      if (DEMO) showModalErr("#inviteErr", "Demo mode: this link is made up and won't work.");
+    } catch (err) {
+      $("#inviteLink").value = "";
+      showModalErr("#inviteErr", err);
+    }
+  }
+  $("#inviteCopy").addEventListener("click", async () => {
+    const btn = $("#inviteCopy");
+    try {
+      await navigator.clipboard.writeText(currentInviteLink);
+    } catch {
+      $("#inviteLink").select();
+      document.execCommand("copy");
+    }
+    btn.textContent = "Copied ✓";
+    setTimeout(() => (btn.textContent = "Copy"), 2000);
+  });
+  $("#inviteShare").addEventListener("click", () => {
+    navigator.share({ title: "Where the Food At", text: `Join my shared list “${currentList()?.name}” on Where the Food At`, url: currentInviteLink })
+      .catch(() => { /* share sheet closed */ });
+  });
+
+  // ── Members ──
+  function openMembers() {
+    const ws = currentList();
+    if (!ws || ws.kind !== "shared") return;
+    const owner = isListOwner(ws);
+    $("#membersTitle").textContent = ws.name;
+    $("#memberList").innerHTML = state.members.map((m) => `
+      <li>
+        <span class="m-info">
+          <span class="m-name">${esc(m.member_id === meId() ? `${m.member_name} (you)` : m.member_name)}</span>
+          <span class="m-meta">${m.member_role === "owner" ? "Created this list" : "Member"}${m.member_email ? ` · ${esc(m.member_email)}` : ""}</span>
+        </span>
+        ${owner && m.member_id !== meId() ? `<button type="button" class="btn btn-ghost btn-xs" data-remove="${esc(m.member_id)}" data-name="${esc(m.member_name)}">Remove</button>` : ""}
+      </li>`).join("");
+    $("#membersLeave").textContent = owner ? "Delete list" : "Leave list";
+    $("#membersInvite").hidden = !owner;
+    showModalErr("#membersErr");
+    if (!$("#membersDlg").open) $("#membersDlg").showModal();
+  }
+  $("#memberList").addEventListener("click", async (e) => {
+    const b = e.target.closest("[data-remove]");
+    if (!b) return;
+    const ws = currentList();
+    if (!confirm(`Remove ${b.dataset.name} from “${ws.name}”? Their places will stop showing in this list.`)) return;
+    try {
+      await db.removeMember(ws.id, b.dataset.remove);
+      await loadPlaces();
+      openMembers();
+      toast(`Removed ${b.dataset.name}`);
+    } catch (err) { showModalErr("#membersErr", err); }
+  });
+  $("#membersInvite").addEventListener("click", openInvite);
+  $("#membersLeave").addEventListener("click", async () => {
+    const ws = currentList();
+    const owner = isListOwner(ws);
+    const question = owner
+      ? `Delete “${ws.name}” for everyone? Nobody loses any places: they stay in each person's own list.`
+      : `Leave “${ws.name}”? Your places will stop showing in it. You'd need a new invite to rejoin.`;
+    if (!confirm(question)) return;
+    try {
+      if (owner) await db.deleteSharedList(ws.id); else await db.leaveList(ws.id);
+      $("#membersDlg").close();
+      await loadWorkspaces(state.personalWsId);
+      toast(owner ? `Deleted “${ws.name}”` : `You left “${ws.name}”`);
+    } catch (err) { showModalErr("#membersErr", err); }
+  });
+
+  // ── Joining through an invite link (?invite=…) ──
+  // The token is kept in storage so it survives the trip to Google's sign-in page and back.
+  {
+    const params = new URLSearchParams(location.search);
+    const token = params.get("invite");
+    if (token) {
+      ls.set(INVITE_KEY, token);
+      params.delete("invite");
+      const rest = params.toString();
+      history.replaceState(null, "", location.pathname + (rest ? `?${rest}` : ""));
+    }
+  }
+  let pendingJoin = null;
+  async function handlePendingInvite() {
+    const token = ls.get(INVITE_KEY);
+    if (!token) return;
+    if (DEMO) { ls.del(INVITE_KEY); toast("Invite links need a real account, not demo mode."); return; }
+    try {
+      const info = await db.peekInvite(token);
+      if (!info) { ls.del(INVITE_KEY); toast("That invite link isn't valid."); return; }
+      if (info.invite_status === "member") {
+        ls.del(INVITE_KEY);
+        await loadWorkspaces(info.list_id);
+        toast(`You're already in “${info.list_name}”`);
+        return;
+      }
+      if (info.invite_status !== "ok") {
+        ls.del(INVITE_KEY);
+        toast(info.invite_status === "used" ? "That invite link has already been used. Ask for a new one." : "That invite link has expired. Ask for a new one.");
+        return;
+      }
+      pendingJoin = { token, ...info };
+      $("#joinTitle").textContent = `Join “${info.list_name}”?`;
+      $("#joinText").textContent = `${info.inviter} invited you to a shared list. You'll see each other's saved places. Anything you add still goes in your own list, and only you can edit your places.`;
+      showModalErr("#joinErr");
+      $("#joinDlg").showModal();
+    } catch (err) {
+      toast("Couldn't open the invite: " + (err.message || err));
+    }
+  }
+  $("#joinLater").addEventListener("click", () => { ls.del(INVITE_KEY); $("#joinDlg").close(); });
+  $("#joinGo").addEventListener("click", async () => {
+    const btn = $("#joinGo");
+    btn.disabled = true;
+    try {
+      const id = await db.acceptInvite(pendingJoin.token);
+      ls.del(INVITE_KEY);
+      $("#joinDlg").close();
+      await loadWorkspaces(id);
+      toast(`You've joined “${pendingJoin.list_name}”`);
+    } catch (err) {
+      showModalErr("#joinErr", err);
+    } finally {
+      btn.disabled = false;
+    }
+  });
   function listError(title, detail) {
     $("#resultsMeta").textContent = "";
     $("#list").innerHTML = `<div class="empty"><div class="empty-art">${ic("x", "ic-lg")}</div><h3>${esc(title)}</h3><p>${esc(detail)}</p>
@@ -1994,7 +2453,8 @@ dialog.modal::backdrop { background: rgba(43, 34, 48, .4); backdrop-filter: blur
   }
   function cardHTML(p) {
     const st = status(p);
-    const sub = [CATEGORY[p.category], [p.suburb, p.postcode].filter(Boolean).join(" ")].filter(Boolean).join(" · ");
+    const by = isSharedView() ? addedBy(p) : null;
+    const sub = [CATEGORY[p.category], [p.suburb, p.postcode].filter(Boolean).join(" "), by ? `added by ${by}` : ""].filter(Boolean).join(" · ");
     const facts = [];
     const easeCls = (v) => (v === 3 ? "good" : v === 1 ? "bad" : "");
     if (p.max_group_size) facts.push(`<li>${ic("users")}Up to ${esc(p.max_group_size)}</li>`);
@@ -2027,6 +2487,12 @@ dialog.modal::backdrop { background: rgba(43, 34, 48, .4); backdrop-filter: blur
       </article>`;
   }
   function emptyHTML(kind) {
+    if (kind === "none" && isSharedView()) {
+      return `<div class="empty"><div class="empty-art">${ic("users", "ic-lg")}</div>
+        <h3>Nothing shared yet</h3>
+        <p>Places saved by anyone in this list show up here. Add one and it goes into your own list, and appears here too.</p>
+        <div class="actions"><button class="btn btn-primary" type="button" data-add>${ic("plus")}Add a place</button></div></div>`;
+    }
     if (kind === "none") {
       return `<div class="empty"><div class="empty-art">${ic("utensils", "ic-lg")}</div>
         <h3>Your list is empty</h3>
@@ -2053,7 +2519,7 @@ dialog.modal::backdrop { background: rgba(43, 34, 48, .4); backdrop-filter: blur
     const rows = results();
     const total = state.places.length;
     const filters = activeFilters();
-    $("#resultsTitle").textContent = filters.length ? "Places that fit" : "Your places";
+    $("#resultsTitle").textContent = filters.length ? "Places that fit" : isSharedView() ? "Everyone's places" : "Your places";
     $("#resultsMeta").textContent = !total ? "Nothing saved yet"
       : filters.length ? `${rows.length} of ${plural(total, "saved place")}` : plural(total, "saved place");
     $("#activeChips").innerHTML = filters.length
@@ -2110,9 +2576,12 @@ dialog.modal::backdrop { background: rgba(43, 34, 48, .4); backdrop-filter: blur
       <div class="detail-status"><span class="status ${st.cls}">${esc(st.text)}</span>${priceHTML(p.price_level)}</div>
       <div class="detail-actions">
         ${actions.join("")}
-        <button type="button" class="btn btn-sm ${p.visited ? "btn-soft" : "btn-outline"}" id="visitedToggle" aria-pressed="${!!p.visited}">
-          ${p.visited ? `${ic("check")}Been here` : "Mark as visited"}
-        </button>
+        ${canEdit(p)
+          ? `<button type="button" class="btn btn-sm ${p.visited ? "btn-soft" : "btn-outline"}" id="visitedToggle" aria-pressed="${!!p.visited}">
+              ${p.visited ? `${ic("check")}Been here` : "Mark as visited"}</button>`
+          : hasMyCopy(p)
+            ? `<span class="pill ok">${ic("check")}In My places</span>`
+            : `<button type="button" class="btn btn-sm btn-soft" id="saveCopy">${ic("plus")}Save to My places</button>`}
       </div>`;
 
     const tile = (label, value) => `<div class="tile"><small>${label}</small><strong>${value || '<span class="none">Not added</span>'}</strong></div>`;
@@ -2151,20 +2620,26 @@ dialog.modal::backdrop { background: rgba(43, 34, 48, .4); backdrop-filter: blur
       ${notes.map(([k, v]) => `<section class="dsec"><h3>${k}</h3><div class="note-block">${esc(v)}</div></section>`).join("")}
       ${(p.tags || []).length ? `<section class="dsec"><h3>Tags</h3><div class="pills" style="margin-top:12px">${p.tags.map((t) => `<span class="pill tag">${esc(t)}</span>`).join("")}</div></section>` : ""}`;
     const fmtDate = (d) => new Date(d).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
+    const by = isSharedView() ? addedBy(p) : null;
     $("#detailFootNote").textContent = [
+      by ? `Added by ${by}` : "",
       p.created_at ? `Saved ${fmtDate(p.created_at)}` : "",
       p.snapshot_at ? `Google details as of ${fmtDate(p.snapshot_at)}` : "",
     ].filter(Boolean).join(" · ");
+    // Only the person who added a place can edit it; everyone else can save their own copy.
+    $("#detailEditBtn").hidden = !canEdit(p);
     const dlg = $("#detailDlg");
     if (!dlg.open) dlg.showModal();
     $(".sheet-body", dlg).scrollTop = 0;
   }
   // One tap in the details header flips "visited" without opening the editor.
   $("#detailHead").addEventListener("click", async (e) => {
+    const copyBtn = e.target.closest("#saveCopy");
+    if (copyBtn) return saveCopyToMine(copyBtn);
     const btn = e.target.closest("#visitedToggle");
     if (!btn) return;
     const p = state.places.find((x) => x.id === state.detailId);
-    if (!p) return;
+    if (!p || !canEdit(p)) return;
     btn.disabled = true;
     try {
       const saved = await db.save({ id: p.id, visited: !p.visited });
@@ -2177,10 +2652,29 @@ dialog.modal::backdrop { background: rgba(43, 34, 48, .4); backdrop-filter: blur
       toast("Couldn't update: " + (err.message || err));
     }
   });
+  // Copy someone else's place into your own list (as "to try", without their rating).
+  async function saveCopyToMine(btn) {
+    const p = state.places.find((x) => x.id === state.detailId);
+    if (!p) return;
+    btn.disabled = true;
+    try {
+      const { id, workspace_id, created_by, created_at, updated_at, ...details } = p;
+      const copy = await db.save({ ...details, workspace_id: state.personalWsId, visited: false, our_rating: null });
+      await loadPlaces();
+      // Whichever entry the shared list now shows for this place (yours, if you created the list).
+      const shown = state.places.find((x) => placeKey(x) === placeKey(copy));
+      openDetail(shown ? shown.id : copy.id);
+      toast(`Saved “${p.name}” to My places`);
+    } catch (err) {
+      btn.disabled = false;
+      toast("Couldn't save: " + (err.message || err));
+    }
+  }
   $("#detailEditBtn").addEventListener("click", () => {
     const p = state.places.find((x) => x.id === state.detailId);
+    if (!p || !canEdit(p)) return;
     $("#detailDlg").close();
-    if (p) openEditor(p);
+    openEditor(p);
   });
 
   // ══════════════════════════════════════════════════════════
@@ -2879,7 +3373,7 @@ dialog.modal::backdrop { background: rgba(43, 34, 48, .4); backdrop-filter: blur
 
   function openEditor(p) {
     state.editingId = p?.id || null;
-    $("#editEyebrow").textContent = p ? "Edit place" : "New place";
+    $("#editEyebrow").textContent = p ? "Edit place" : isSharedView() ? "New place · saves to My places" : "New place";
     $("#editTitle").textContent = p ? p.name : "Add a place";
     $("#saveBtn").textContent = p ? "Save changes" : "Save place";
     $("#deleteBtn").hidden = !p;
@@ -2913,18 +3407,22 @@ dialog.modal::backdrop { background: rgba(43, 34, 48, .4); backdrop-filter: blur
       invalid[0]?.focus({ preventScroll: true });
       return;
     }
+    // New places always go into your own list, even when you're looking at a shared one.
     if (state.editingId) place.id = state.editingId;
-    else place.workspace_id = state.wsId;
+    else place.workspace_id = state.personalWsId;
     const btn = $("#saveBtn"), label = btn.textContent;
     btn.disabled = true;
     btn.textContent = "Saving…";
     try {
       const saved = await db.save(place);
-      const i = state.places.findIndex((p) => p.id === saved.id);
-      if (i >= 0) state.places[i] = saved; else state.places.push(saved);
       editDlg.close();
-      refreshSuggestions();
-      render();
+      if (isSharedView()) await loadPlaces();
+      else {
+        const i = state.places.findIndex((p) => p.id === saved.id);
+        if (i >= 0) state.places[i] = saved; else state.places.push(saved);
+        refreshSuggestions();
+        render();
+      }
       toast(state.editingId ? "Changes saved" : `Saved “${saved.name}”`);
     } catch (err) {
       const box = $("#editErrors");
@@ -2948,18 +3446,20 @@ dialog.modal::backdrop { background: rgba(43, 34, 48, .4); backdrop-filter: blur
       box.textContent = "We couldn't delete that: " + (err.message || err);
       return;
     }
-    state.places = state.places.filter((x) => x.id !== p.id);
     editDlg.close();
-    refreshSuggestions();
-    render();
+    if (isSharedView()) await loadPlaces();
+    else {
+      state.places = state.places.filter((x) => x.id !== p.id);
+      state.rawPlaces = state.places;
+      refreshSuggestions();
+      render();
+    }
     toast(`Deleted “${p.name}”`, {
       label: "Undo",
       fn: async () => {
         try {
-          const back = await db.restore(p);
-          state.places.push(back);
-          refreshSuggestions();
-          render();
+          await db.restore(p);
+          await loadPlaces();
           toast(`Restored “${p.name}”`);
         } catch (err) { toast("Couldn't restore: " + (err.message || err)); }
       },
@@ -2985,9 +3485,10 @@ dialog.modal::backdrop { background: rgba(43, 34, 48, .4); backdrop-filter: blur
     $("#resetDemoBtn").hidden = false;
     $("#resetDemoBtn").addEventListener("click", async () => {
       $("#userMenu").open = false;
-      if (!confirm("Replace everything in the demo list with the sample places?")) return;
+      if (!confirm("Replace everything in demo mode with the sample places and lists?")) return;
       ls.del(DEMO_KEY);
-      await loadPlaces();
+      ls.del(DEMO_LISTS_KEY);
+      await loadWorkspaces("demo");
       toast("Demo data reset");
     });
     $("#appView").hidden = false;
