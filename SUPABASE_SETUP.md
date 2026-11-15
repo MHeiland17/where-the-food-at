@@ -69,6 +69,29 @@ Open <http://localhost:5500>, choose **Create account**, confirm via the email, 
 Once both accounts exist: **Authentication → Sign In / Providers → turn off "Allow new users to sign up"**.
 Nobody else can create an account, even if they find the URL.
 
+## 8. Google Places search (fill in a new entry from Google)
+Needs the Google Cloud set-up (Places API (New) enabled, a key restricted to it) and the key stored as the
+Supabase secret `GOOGLE_PLACES_KEY` (**Edge Functions → Secrets**).
+
+1. **Database:** run [`supabase/002_google_search.sql`](supabase/002_google_search.sql) in the **SQL Editor**.
+   It adds `google_place_id` / `snapshot_at` to `places` and the daily usage counter.
+2. **Server function:** **Edge Functions → Deploy a new function → Via Editor**.
+   - Name it exactly `places`.
+   - Replace the sample code with the contents of
+     [`supabase/functions/places/index.ts`](supabase/functions/places/index.ts) → **Deploy function**.
+   - Open the function → **Details** (or **Settings**) → turn **Verify JWT / Enforce JWT verification**
+     **off** → save. The function checks the signed-in user itself.
+
+   Command-line alternative (from the project folder):
+   ```bash
+   npx supabase login
+   npx supabase functions deploy places --project-ref dijpdzeswufcyqsatdut --no-verify-jwt --use-api
+   ```
+3. **Try it:** sign in → **Add a place** → type a name → **Search** → pick a result → **Fill in details**.
+
+Daily caps live in the function (`DAILY_LIMITS`: 200 searches, 50 fill-ins). If the app is ever served
+from a new address, add it to `ALLOWED_ORIGINS` at the top of the function and redeploy.
+
 ## Good to know
 - **Free projects pause after ~7 days with no activity.** Unpause from the dashboard with one click.
   Your data is kept.

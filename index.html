@@ -566,6 +566,53 @@ dialog.sheet::backdrop { background: rgba(43, 34, 48, .32); backdrop-filter: blu
 .detail-foot-note { color: var(--muted); font-size: 13px; }
 
 /* ════════════════════════════════════════════════════════════
+   Google search in the editor
+   ════════════════════════════════════════════════════════════ */
+.name-row { display: flex; gap: 8px; }
+.name-row .input { flex: 1; min-width: 0; }
+.name-row .btn { min-height: 48px; flex: none; }
+.g-results { margin-top: 10px; border: 1px solid var(--line-strong); border-radius: var(--r); background: var(--surface); box-shadow: var(--shadow); overflow: hidden; }
+.g-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 6px 8px 6px 16px; background: var(--surface-2); font-size: 13px; color: var(--muted); }
+.g-head .icon-btn.sm:hover { color: var(--ink); background: var(--line); }
+.g-list { list-style: none; margin: 0; padding: 0; max-height: 340px; overflow-y: auto; }
+.g-item { width: 100%; display: flex; align-items: flex-start; gap: 12px; padding: 12px 16px; border: 0; border-top: 1px solid var(--line); background: none; text-align: left; }
+.g-list li:first-child .g-item { border-top: 0; }
+.g-item:hover, .g-item:focus-visible { background: var(--rose-50); outline: none; }
+.g-item .ic { color: var(--rose); margin-top: 3px; }
+.g-name { display: block; font-weight: 600; color: var(--ink); }
+.g-addr { display: block; font-size: 13px; color: var(--muted); margin-top: 2px; }
+.g-foot { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 10px 16px; border-top: 1px solid var(--line); font-size: 12px; color: var(--muted); }
+.g-msg { padding: 16px; font-size: 14px; color: var(--muted); }
+.g-msg.err { color: var(--red); }
+.linked { display: flex; align-items: center; gap: 6px 10px; flex-wrap: wrap; font-size: 13px; color: var(--sage); font-weight: 600; }
+.linked .ic { width: 15px; height: 15px; }
+.linked .link-btn { font-size: 13px; }
+.linked .link-btn.quiet { color: var(--muted); font-weight: 500; }
+/* Fields filled from Google get a small tag next to their label */
+.field.prefilled > label::after, .field.prefilled > .label::after, .field.prefilled .label-row > .label::after,
+.esec.prefilled > .esec-title::after, .switch-row.prefilled strong::after {
+  content: " · from Google"; font-family: var(--font-body); font-size: 12px; font-weight: 600; color: var(--amber);
+}
+
+/* Small centred modal */
+dialog.modal {
+  width: min(460px, calc(100vw - 32px)); max-height: calc(100vh - 32px); overflow-y: auto;
+  border: 0; border-radius: var(--r-lg); padding: 28px; background: var(--surface); color: var(--ink); box-shadow: var(--shadow-lg);
+}
+dialog.modal[open] { animation: popIn .22s var(--ease); }
+dialog.modal::backdrop { background: rgba(43, 34, 48, .4); backdrop-filter: blur(3px); }
+@keyframes popIn { from { transform: scale(.96); opacity: 0; } }
+.modal h2 { font-family: var(--font-display); font-weight: 600; font-size: 24px; line-height: 1.2; }
+.place-box { display: flex; gap: 12px; margin: 18px 0 16px; padding: 14px 16px; background: var(--surface-2); border-radius: var(--r); }
+.place-box .ic { color: var(--rose); margin-top: 3px; }
+.choice { display: flex; gap: 12px; align-items: flex-start; padding: 12px 14px; border: 1px solid var(--line-strong); border-radius: var(--r); cursor: pointer; }
+.choice + .choice { margin-top: 8px; }
+.choice:has(input:checked) { border-color: var(--rose); background: var(--rose-50); }
+.choice input { margin: 4px 0 0; accent-color: var(--rose); width: 16px; height: 16px; flex: none; }
+.choice strong { display: block; font-size: 15px; }
+.modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 24px; flex-wrap: wrap; }
+
+/* ════════════════════════════════════════════════════════════
    Toast & FAB
    ════════════════════════════════════════════════════════════ */
 .toasts { position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%); z-index: 100; display: grid; gap: 10px; width: max-content; max-width: calc(100vw - 32px); }
@@ -928,7 +975,13 @@ dialog.sheet::backdrop { background: rgba(43, 34, 48, .32); backdrop-filter: blu
         <div class="esec-body">
           <div class="field">
             <label for="eName">Name <span class="req">required</span></label>
-            <input id="eName" name="name" class="input" placeholder="e.g. Golden Lantern Dumpling House" autocomplete="off">
+            <div class="name-row">
+              <input id="eName" name="name" class="input" placeholder="e.g. Golden Lantern Dumpling House" autocomplete="off" enterkeyhint="search">
+              <button type="button" class="btn btn-soft" id="gSearchBtn"><i data-ic="search"></i>Search</button>
+            </div>
+            <p class="help" id="gHint">Search Google to fill in the details for you, or just type everything yourself.</p>
+            <p class="linked" id="gLinked" hidden></p>
+            <div class="g-results" id="gResults" hidden></div>
           </div>
           <div class="field">
             <span class="label" id="catLabel">Type of place</span>
@@ -1164,6 +1217,21 @@ dialog.sheet::backdrop { background: rgba(43, 34, 48, .32); backdrop-filter: blu
   </form>
 </dialog>
 
+<!-- ═════════════════════════════ Fill-in confirmation ═════════════════════════════ -->
+<dialog id="prefillDlg" class="modal" aria-labelledby="prefillTitle">
+  <p class="eyebrow">Fill in from Google</p>
+  <h2 id="prefillTitle">Use these details?</h2>
+  <div class="place-box"><i data-ic="pin"></i><span><span class="g-name" id="prefillName"></span><span class="g-addr" id="prefillAddr"></span></span></div>
+  <p class="help" style="margin-bottom:16px">We'll copy what Google has (address, phone, website, opening hours, price, meals, drinks, booking and parking) into the form as a one-off snapshot. You can change anything before saving.</p>
+  <label class="choice"><input type="radio" name="prefillMode" value="empty" checked><span><strong>Only fill empty fields</strong><span class="help">Keeps anything you've already entered.</span></span></label>
+  <label class="choice"><input type="radio" name="prefillMode" value="replace"><span><strong>Replace with Google's details</strong><span class="help">Overwrites fields where Google has information.</span></span></label>
+  <p class="alert" id="prefillErr" role="alert" hidden style="margin-top:16px"></p>
+  <div class="modal-actions">
+    <button type="button" class="btn btn-ghost" id="prefillCancel">Cancel</button>
+    <button type="button" class="btn btn-primary" id="prefillGo">Fill in details</button>
+  </div>
+</dialog>
+
 <script>
 (() => {
   "use strict";
@@ -1197,6 +1265,7 @@ dialog.sheet::backdrop { background: rgba(43, 34, 48, .32); backdrop-filter: blu
     logout: '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>',
     refresh: '<path d="M3 12a9 9 0 0 1 15-6.7L21 8M21 3v5h-5M21 12a9 9 0 0 1-15 6.7L3 16M3 21v-5h5"/>',
     sparkle: '<path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M6 18l2.5-2.5M15.5 8.5 18 6"/>',
+    check: '<path d="M20 6 9 17l-5-5"/>',
   };
   const ic = (name, cls = "") => `<svg class="ic ${cls}" viewBox="0 0 24 24" aria-hidden="true" focusable="false">${ICONS[name] || ""}</svg>`;
   document.querySelectorAll("i[data-ic]").forEach((el) => { el.outerHTML = ic(el.dataset.ic, el.className); });
@@ -1333,7 +1402,8 @@ dialog.sheet::backdrop { background: rgba(43, 34, 48, .32); backdrop-filter: blu
   // Data layer: Supabase, or localStorage in demo mode
   // ══════════════════════════════════════════════════════════
   const cfg = window.WTFA_CONFIG || {};
-  const DEMO = !(cfg.supabaseUrl && cfg.supabaseKey);
+  // ?demo in the URL forces demo mode (handy for trying things without touching real data).
+  const DEMO = new URLSearchParams(location.search).has("demo") || !(cfg.supabaseUrl && cfg.supabaseKey);
   const sb = !DEMO && window.supabase ? window.supabase.createClient(cfg.supabaseUrl, cfg.supabaseKey) : null;
   const DEMO_KEY = "wtfa-demo-places-v2";
   const WS_KEY = "wtfa-workspace";
@@ -1472,6 +1542,9 @@ dialog.sheet::backdrop { background: rgba(43, 34, 48, .32); backdrop-filter: blu
   let toastTimer;
   function toast(message, action) {
     const box = $("#toasts");
+    // Open dialogs sit in the browser's top layer, so move the toast inside the topmost one to keep it visible.
+    const host = $$("dialog[open]").pop() || document.body;
+    if (box.parentElement !== host) host.appendChild(box);
     clearTimeout(toastTimer);
     box.innerHTML = `<div class="toast"><span>${esc(message)}</span>${action ? `<button type="button" class="btn">${esc(action.label)}</button>` : ""}</div>`;
     if (action) $("button", box).addEventListener("click", () => { box.innerHTML = ""; action.fn(); });
@@ -2021,7 +2094,11 @@ dialog.sheet::backdrop { background: rgba(43, 34, 48, .32); backdrop-filter: blu
       <section class="dsec"><h3>Opening hours</h3>${hoursHTML}${kitchenHTML}${hoursNote}</section>
       ${notes.map(([k, v]) => `<section class="dsec"><h3>${k}</h3><div class="note-block">${esc(v)}</div></section>`).join("")}
       ${(p.tags || []).length ? `<section class="dsec"><h3>Tags</h3><div class="pills" style="margin-top:12px">${p.tags.map((t) => `<span class="pill tag">${esc(t)}</span>`).join("")}</div></section>` : ""}`;
-    $("#detailFootNote").textContent = p.created_at ? `Saved ${new Date(p.created_at).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" })}` : "";
+    const fmtDate = (d) => new Date(d).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
+    $("#detailFootNote").textContent = [
+      p.created_at ? `Saved ${fmtDate(p.created_at)}` : "",
+      p.snapshot_at ? `Google details as of ${fmtDate(p.snapshot_at)}` : "",
+    ].filter(Boolean).join(" · ");
     const dlg = $("#detailDlg");
     if (!dlg.open) dlg.showModal();
     $(".sheet-body", dlg).scrollTop = 0;
@@ -2292,7 +2369,11 @@ dialog.sheet::backdrop { background: rgba(43, 34, 48, .32); backdrop-filter: blu
     applyAutoMeals();
 
     $$("[aria-invalid]", form).forEach((x) => x.removeAttribute("aria-invalid"));
+    $$(".prefilled", form).forEach((x) => x.classList.remove("prefilled"));
     $("#editErrors").hidden = true;
+    editorGoogle = p?.google_place_id ? { id: p.google_place_id, at: p.snapshot_at || null } : null;
+    showResults("");
+    renderLinked();
     refreshFoodUI();
     toggleBooking();
   }
@@ -2353,8 +2434,315 @@ dialog.sheet::backdrop { background: rgba(43, 34, 48, .32); backdrop-filter: blu
       transport_notes: blankToNull(el.transport_notes.value.trim()),
       tags,
       notes: blankToNull(el.notes.value.trim()),
+      google_place_id: editorGoogle?.id ?? null,
+      snapshot_at: editorGoogle?.at ?? null,
     };
     return { place, errors, invalid };
+  }
+
+  // ══════════════════════════════════════════════════════════
+  // Google search & fill-in
+  // ══════════════════════════════════════════════════════════
+  let editorGoogle = null;   // { id, at } when the entry was filled from Google
+  let lastResults = [];
+  let pendingPick = null;
+
+  // Talks to the `places` Edge Function (or made-up data in demo mode).
+  async function placesApi(body) {
+    if (DEMO) return demoPlacesApi(body);
+    const { data, error } = await sb.functions.invoke("places", { body });
+    if (!error) return data;
+    let message = error.message || String(error);
+    try { const j = await error.context.json(); if (j?.error) message = j.error; } catch { /* not JSON */ }
+    if (/failed to send|not found|404/i.test(message)) message = "Search isn't set up yet: the “places” server function hasn't been deployed.";
+    throw new Error(message);
+  }
+
+  const fmtShortDate = (d) => new Date(d).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
+  function renderLinked() {
+    const box = $("#gLinked");
+    box.hidden = !editorGoogle;
+    $("#gHint").hidden = !!editorGoogle;
+    if (!editorGoogle) { box.innerHTML = ""; return; }
+    box.innerHTML = `${ic("check")}<span>Filled from Google${editorGoogle.at ? ` · details as of ${esc(fmtShortDate(editorGoogle.at))}` : ""}</span>
+      <button type="button" class="link-btn" id="gRefresh">Refresh from Google</button>
+      <button type="button" class="link-btn quiet" id="gUnlink">Unlink</button>`;
+  }
+  function showResults(html) {
+    const box = $("#gResults");
+    box.innerHTML = html;
+    box.hidden = !html;
+  }
+  const resultsFoot = (withClose) =>
+    `<div class="g-foot"><span>${DEMO ? "Demo results (made up)" : "Powered by Google"}</span>${withClose ? '<button type="button" class="link-btn" data-g-close>Close</button>' : ""}</div>`;
+  function nearHint() {
+    const el = form.elements;
+    return [el.suburb.value.trim(), el.postcode.value.trim(), el.state.value].filter(Boolean).join(" ");
+  }
+
+  async function runSearch() {
+    const q = form.elements.name.value.trim();
+    if (q.length < 2) {
+      form.elements.name.focus();
+      showResults(`<div class="g-msg">Type at least 2 letters of the name, then search.</div>`);
+      return;
+    }
+    const btn = $("#gSearchBtn");
+    const label = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = `${ic("search")}Searching…`;
+    showResults(`<div class="g-msg">Searching for “${esc(q)}”…</div>`);
+    try {
+      const near = nearHint();
+      const { places } = await placesApi({ action: "search", query: q, near });
+      lastResults = places || [];
+      if (!lastResults.length) {
+        showResults(`<div class="g-msg">No matches for “${esc(q)}”${near ? ` near ${esc(near)}` : ""}. Check the spelling, or fill the form in yourself.</div>${resultsFoot(true)}`);
+        return;
+      }
+      const n = lastResults.length;
+      showResults(`
+        <div class="g-head"><span>${n === 1 ? "1 match" : `${n} matches`}. Pick the right one</span>
+          <button type="button" class="icon-btn sm" data-g-close aria-label="Close results">${ic("x")}</button></div>
+        <ul class="g-list">${lastResults.map((p, i) => `
+          <li><button type="button" class="g-item" data-g-pick="${i}">${ic("pin")}
+            <span><span class="g-name">${esc(p.displayName?.text || "Unnamed place")}</span><span class="g-addr">${esc(p.formattedAddress || "Address not listed")}</span></span>
+          </button></li>`).join("")}</ul>
+        ${resultsFoot(false)}`);
+      $(".g-item", $("#gResults"))?.focus();
+    } catch (err) {
+      showResults(`<div class="g-msg err">${esc(err.message || String(err))}</div>${resultsFoot(true)}`);
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = label;
+    }
+  }
+  $("#gSearchBtn").addEventListener("click", runSearch);
+  form.elements.name.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); runSearch(); } });
+  $("#gResults").addEventListener("click", (e) => {
+    if (e.target.closest("[data-g-close]")) { showResults(""); form.elements.name.focus(); return; }
+    const i = e.target.closest("[data-g-pick]")?.dataset.gPick;
+    if (i == null) return;
+    const p = lastResults[Number(i)];
+    openPrefill({ id: p.id, name: p.displayName?.text || "", address: p.formattedAddress || "" });
+  });
+  $("#gLinked").addEventListener("click", (e) => {
+    if (e.target.id === "gRefresh") {
+      const el = form.elements;
+      const address = [el.street.value, [el.suburb.value, el.state.value, el.postcode.value].filter(Boolean).join(" ")].filter((s) => s.trim()).join(", ");
+      openPrefill({ id: editorGoogle.id, name: el.name.value.trim(), address, refresh: true });
+    }
+    if (e.target.id === "gUnlink") { editorGoogle = null; renderLinked(); }
+  });
+
+  // ── Confirmation modal ──
+  const prefillDlg = $("#prefillDlg");
+  function openPrefill(pick) {
+    pendingPick = pick;
+    $("#prefillTitle").textContent = pick.refresh ? "Refresh from Google?" : "Use these details?";
+    $("#prefillName").textContent = pick.name || "Selected place";
+    $("#prefillAddr").textContent = pick.address;
+    $(`input[name="prefillMode"][value="${pick.refresh ? "replace" : "empty"}"]`, prefillDlg).checked = true;
+    $("#prefillErr").hidden = true;
+    $("#prefillGo").disabled = false;
+    $("#prefillGo").textContent = "Fill in details";
+    prefillDlg.showModal();
+    $("#prefillGo").focus();
+  }
+  $("#prefillCancel").addEventListener("click", () => prefillDlg.close());
+  prefillDlg.addEventListener("click", (e) => { if (e.target === prefillDlg) prefillDlg.close(); });
+  $("#prefillGo").addEventListener("click", async () => {
+    const btn = $("#prefillGo");
+    btn.disabled = true;
+    btn.textContent = "Getting details…";
+    try {
+      const { place } = await placesApi({ action: "details", id: pendingPick.id });
+      const replace = $('input[name="prefillMode"]:checked', prefillDlg).value === "replace";
+      const filled = applyPrefill(mapGooglePlace(place), replace);
+      editorGoogle = { id: pendingPick.id, at: new Date().toISOString() };
+      renderLinked();
+      showResults("");
+      prefillDlg.close();
+      toast(filled
+        ? `Filled ${plural(filled, "field")} from Google. They're marked “from Google”; check them, then save.`
+        : "Nothing new to fill in. Your entries were kept.");
+    } catch (err) {
+      $("#prefillErr").hidden = false;
+      $("#prefillErr").textContent = err.message || String(err);
+      btn.disabled = false;
+      btn.textContent = "Try again";
+    }
+  });
+
+  // ── Google's fields → this app's fields ──
+  const PRICE_LEVELS = { PRICE_LEVEL_INEXPENSIVE: 1, PRICE_LEVEL_MODERATE: 2, PRICE_LEVEL_EXPENSIVE: 3, PRICE_LEVEL_VERY_EXPENSIVE: 4 };
+  const AU_STATES = ["VIC", "NSW", "QLD", "SA", "WA", "TAS", "ACT", "NT"];
+  const CATEGORY_RULES = [
+    [/^(pub|irish_pub)$/, "pub"],
+    [/^(bar|wine_bar|cocktail_bar|lounge_bar|sports_bar|night_club|beer_hall|brewpub)$/, "bar"],
+    [/(cafe|coffee_shop|tea_house|cafeteria|juice_shop)/, "cafe"],
+    [/(bakery|pastry|donut|bagel|dessert_shop)/, "bakery"],
+    [/(meal_takeaway|fast_food)/, "takeaway"],
+    [/(restaurant|food_court|diner|bistro|steak_house|pizzeria|brunch|breakfast)/, "restaurant"],
+  ];
+  function mapCategory(primary, types = []) {
+    for (const t of [primary, ...types].filter(Boolean)) {
+      for (const [re, cat] of CATEGORY_RULES) if (re.test(t)) return cat;
+    }
+    return null;
+  }
+  function mapHours(roh) {
+    const periods = roh?.periods;
+    if (!Array.isArray(periods) || !periods.length) return null;
+    const hours = Object.fromEntries(DAYS.map((d) => [d, []]));
+    const hhmm = (t) => `${pad(t?.hour ?? 0)}:${pad(t?.minute ?? 0)}`;
+    for (const p of periods) {
+      if (!p.open) continue;
+      if (!p.close) return Object.fromEntries(DAYS.map((d) => [d, [["00:00", "24:00"]]])); // open 24/7
+      const o = hhmm(p.open);
+      let c = hhmm(p.close);
+      if (c === o) c = "24:00"; // open around the clock that day
+      hours[DAYS[(p.open.day + 6) % 7]].push([o, c]);
+    }
+    for (const d of DAYS) hours[d].sort((a, b) => toMin(a[0]) - toMin(b[0]));
+    return DAYS.some((d) => hours[d].length) ? hours : null;
+  }
+  function mapParking(po) {
+    if (!po) return null;
+    if (po.freeParkingLot || po.freeGarageParking) return 3;
+    if (po.paidParkingLot || po.paidGarageParking || po.valetParking || po.freeStreetParking || po.paidStreetParking) return 2;
+    return null;
+  }
+  function mapGooglePlace(g) {
+    const comp = (type, short = false) => {
+      const c = (g.addressComponents || []).find((x) => (x.types || []).includes(type));
+      return c ? (short ? c.shortText : c.longText) : "";
+    };
+    const unit = comp("subpremise"), num = comp("street_number"), route = comp("route", true);
+    const streetNo = unit && num ? `${unit}/${num}` : num;
+    const street = [streetNo, route].filter(Boolean).join(" ");
+    const state = comp("administrative_area_level_1", true);
+    const meals = PERIODS.filter((m) => g[`serves${cap(m)}`] === true);
+    const licensed = g.servesBeer || g.servesWine || g.servesCocktails;
+    const phone = g.nationalPhoneNumber || null;
+    const website = g.websiteUri || null;
+    return {
+      name: g.displayName?.text || null,
+      street: street || null,
+      suburb: comp("locality") || comp("sublocality") || null,
+      postcode: comp("postal_code") || null,
+      state: AU_STATES.includes(state) ? state : null,
+      phone,
+      website,
+      category: mapCategory(g.primaryType, g.types),
+      price_level: PRICE_LEVELS[g.priceLevel] ?? null,
+      hours: mapHours(g.regularOpeningHours),
+      meals: meals.length ? meals : null,
+      alcohol: licensed ? "licensed" : null,
+      delivery: typeof g.delivery === "boolean" ? g.delivery : null,
+      takeaway: typeof g.takeout === "boolean" ? g.takeout : null,
+      booking_method: g.reservable === true ? (website ? "online" : phone ? "phone" : null) : g.reservable === false ? "walk_in" : null,
+      public_rating: typeof g.rating === "number" ? Math.round(g.rating * 10) / 10 : null,
+      parking_ease: mapParking(g.parkingOptions),
+    };
+  }
+
+  // Put mapped values into the form. Returns how many fields were filled.
+  function applyPrefill(m, replace) {
+    const el = form.elements;
+    let n = 0;
+    const mark = (node) => node?.closest(".switch-row, .field, .esec")?.classList.add("prefilled");
+    // The name box holds what was searched for, so the place's proper name always replaces it.
+    if (m.name && el.name.value !== m.name) { el.name.value = m.name; mark(el.name); n++; }
+    for (const k of ["street", "suburb", "postcode", "phone", "website"]) {
+      if (m[k] && (replace || !el[k].value.trim()) && el[k].value !== m[k]) { el[k].value = m[k]; mark(el[k]); n++; }
+    }
+    if (m.state && (replace || !el.state.value) && el.state.value !== m.state) { el.state.value = m.state; mark(el.state); n++; }
+    if (m.public_rating != null && (replace || el.public_rating.value === "")) { el.public_rating.value = String(m.public_rating); mark(el.public_rating); n++; }
+
+    const radioEmpty = (k) => ["", "unknown"].includes(radio(k));
+    const categoryWasEmpty = radioEmpty("category");
+    for (const k of ["category", "price_level", "booking_method", "parking_ease", "alcohol"]) {
+      if (m[k] != null && (replace || radioEmpty(k)) && radio(k) !== String(m[k])) {
+        setRadio(k, m[k]);
+        mark(form.querySelector(`input[name="${k}"]`));
+        n++;
+      }
+    }
+    for (const k of ["delivery", "takeaway"]) {
+      if (m[k] != null && (replace || !el[k].checked) && el[k].checked !== m[k]) { el[k].checked = m[k]; mark(el[k]); n++; }
+    }
+
+    if (m.hours && (replace || radio("hoursMode") !== "set")) {
+      setRadio("hoursMode", "set");
+      $("#hoursEditor").hidden = false;
+      for (const d of DAYS) setDay(d, m.hours[d].length > 0, m.hours[d]);
+      mark($("#hoursEditor"));
+      n++;
+    }
+
+    // Food: Google's own meal flags win; otherwise meals keep being worked out from the hours.
+    const foodUntouched = radio("food") === "meals" && mealsAuto;
+    if (m.meals && (replace || foodUntouched)) {
+      setRadio("food", "meals");
+      mealsAuto = false;
+      periodBoxes().forEach((c) => (c.checked = m.meals.includes(c.value)));
+      mark($("#mealsField"));
+      n++;
+    } else if (!m.meals && m.category === "bar" && (categoryWasEmpty || replace) && !foodTouched) {
+      setRadio("food", "none"); // bars default to drinks only, as when picking "Bar" by hand
+      mark(form.querySelector('input[name="food"]'));
+    }
+    applyAutoMeals();
+    refreshFoodUI();
+    toggleBooking();
+    return n;
+  }
+
+  // ── Demo mode: made-up Google-shaped results so the flow can be tried without a key ──
+  function demoPlacesApi(body) {
+    const span = (gDay, o, c) => {
+      const [oh, om] = o.split(":").map(Number), [ch, cm] = c.split(":").map(Number);
+      const overnight = ch * 60 + cm <= oh * 60 + om;
+      return { open: { day: gDay, hour: oh, minute: om }, close: { day: overnight ? (gDay + 1) % 7 : gDay, hour: ch, minute: cm } };
+    };
+    const addr = (num, route, routeShort, suburb, state, stateShort, postcode) => [
+      { longText: num, shortText: num, types: ["street_number"] },
+      { longText: route, shortText: routeShort, types: ["route"] },
+      { longText: suburb, shortText: suburb, types: ["locality", "political"] },
+      { longText: state, shortText: stateShort, types: ["administrative_area_level_1", "political"] },
+      { longText: postcode, shortText: postcode, types: ["postal_code"] },
+    ];
+    const places = [
+      { id: "demo_golden_wok_kitchen_01", displayName: { text: "Golden Wok Kitchen" }, formattedAddress: "18 Station St, Box Hill VIC 3128",
+        addressComponents: addr("18", "Station Street", "Station St", "Box Hill", "Victoria", "VIC", "3128"),
+        primaryType: "chinese_restaurant", types: ["chinese_restaurant", "restaurant", "food"],
+        nationalPhoneNumber: "(03) 9000 3333", websiteUri: "https://example.com/goldenwok", priceLevel: "PRICE_LEVEL_MODERATE", rating: 4.24,
+        servesLunch: true, servesDinner: true, servesBeer: true, servesWine: true, takeout: true, delivery: true, reservable: true, goodForGroups: true,
+        parkingOptions: { freeStreetParking: true },
+        regularOpeningHours: { periods: [2, 3, 4, 5, 6, 0].flatMap((d) => [span(d, "11:30", "15:00"), span(d, "17:00", "22:00")]) } },
+      { id: "demo_morning_fern_espresso_02", displayName: { text: "Morning Fern Espresso" }, formattedAddress: "4 Burke Rd, Camberwell VIC 3124",
+        addressComponents: addr("4", "Burke Road", "Burke Rd", "Camberwell", "Victoria", "VIC", "3124"),
+        primaryType: "cafe", types: ["cafe", "food"], nationalPhoneNumber: "(03) 9000 5555", priceLevel: "PRICE_LEVEL_INEXPENSIVE", rating: 4.6,
+        servesBreakfast: true, servesBrunch: true, servesLunch: true, takeout: true, delivery: false, reservable: false,
+        parkingOptions: { freeParkingLot: true },
+        regularOpeningHours: { periods: [0, 1, 2, 3, 4, 5, 6].map((d) => span(d, "07:00", "15:00")) } },
+      { id: "demo_velvet_lounge_bar_03", displayName: { text: "Velvet Lounge" }, formattedAddress: "9 Bridge Rd, Richmond VIC 3121",
+        addressComponents: addr("9", "Bridge Road", "Bridge Rd", "Richmond", "Victoria", "VIC", "3121"),
+        primaryType: "cocktail_bar", types: ["cocktail_bar", "bar"], nationalPhoneNumber: "(03) 9000 7777", priceLevel: "PRICE_LEVEL_MODERATE", rating: 4.4,
+        servesCocktails: true, servesWine: true, reservable: true,
+        regularOpeningHours: { periods: [3, 4, 5, 6, 0].map((d) => span(d, "16:00", d === 0 ? "22:00" : "01:00")) } },
+    ];
+    return new Promise((resolve, reject) => setTimeout(() => {
+      if (body.action === "search") {
+        const words = norm(body.query).split(" ").filter((w) => w.length > 1);
+        resolve({ places: places.filter((p) => words.some((w) => norm(p.displayName.text + " " + p.formattedAddress).includes(w)))
+          .map(({ id, displayName, formattedAddress, primaryType }) => ({ id, displayName, formattedAddress, primaryType })) });
+      } else {
+        const place = places.find((p) => p.id === body.id);
+        place ? resolve({ place }) : reject(new Error("Place not found (demo)."));
+      }
+    }, 450));
   }
 
   function openEditor(p) {
