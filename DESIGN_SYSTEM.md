@@ -4,8 +4,8 @@ The rules every screen follows, so new work stays consistent. All values live as
 on `:root` in [index.html](index.html)**. Use the token, never a raw number. If something genuinely needs a
 new value, add a token here and in `:root` first, then use it.
 
-**Look & feel:** light, airy, warm and soft. Cream background, white surfaces, dusty-rose accent, plum headings,
-generous spacing, rounded shapes. Light theme only.
+**Look & feel:** light, airy, warm and soft. Cream background, white surfaces, violet accent with lavender fills,
+deep-plum headings, generous spacing, rounded shapes. Light theme only.
 
 ---
 
@@ -18,8 +18,14 @@ generous spacing, rounded shapes. Light theme only.
 | `--surface-2` | Subtle fills: segmented track, tiles, note blocks, hover |
 | `--line` / `--line-strong` | Dividers / input and chip borders |
 | `--ink` / `--ink-2` / `--muted` | Headings & body / secondary text / hints, placeholders, meta |
-| `--rose`, `--rose-600`, `--rose-50`, `--rose-100` | Primary accent: primary buttons, selected states, links, focus |
+| `--accent` (`#713FD7` violet) | Accent text: links, selected states, focus rings, primary-button text, "eat" / "Food" |
+| `--accent-100` (`#E3DAF8` lavender) | Primary button background, soft borders |
+| `--accent-200` / `--accent-50` | Primary button hover / faint lavender fills (soft buttons, selected chips) |
+| `--accent-600` | Hover on solid violet (pressed quick filters, floating + button) |
 | `--plum` | Hero headings only |
+
+**Buttons:** primary = `--accent-100` background + `--accent` text. Solid violet (`--accent` + white) is only for
+"on" states that must stand out (pressed quick filters, the floating + button, count badges).
 | `--sage` / `--sage-50` | Good / open / "easy" |
 | `--amber` / `--amber-50` | Caution / meals / "from Google" / automatic |
 | `--red` / `--red-50` | Errors / closed / "hard" / destructive |
