@@ -2428,7 +2428,7 @@ dialog.modal::backdrop { background: rgba(43, 34, 48, .4); backdrop-filter: blur
     }
     const next = (p.hours[DAYS[day]] || []).map(([o]) => o).filter((o) => toMin(o) > mins).sort()[0];
     if (next) return { cls: "closed", text: `Closed ${when} · opens ${fmtTime(next)}` };
-    return { cls: "closed", text: filtered && !state.nowActive ? `Closed ${when}` : "Closed today" };
+    return { cls: "closed", text: filtered && !state.nowActive ? `Closed ${when}` : (p.hours[DAYS[day]] || []).length ? "Already closed for today" : "Closed today" };
   }
   function priceHTML(level) {
     if (!level) return "";
