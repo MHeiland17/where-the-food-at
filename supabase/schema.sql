@@ -480,3 +480,6 @@ grant execute on function public.list_members(uuid) to authenticated;
 grant execute on function public.remove_member(uuid, uuid) to authenticated;
 grant execute on function public.leave_list(uuid) to authenticated;
 grant execute on function public.delete_shared_list(uuid) to authenticated;
+
+-- v6: cuisine (same as 005_cuisine.sql)
+alter table public.places add column if not exists cuisine text;

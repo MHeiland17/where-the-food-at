@@ -739,6 +739,13 @@ dialog.modal::backdrop { background: rgba(43, 34, 48, .4); backdrop-filter: blur
   /* 16px+ stops iPhones zooming into the page when a field is tapped. */
   .input, .select, textarea.input, .tag-box input, .span-row .select { font-size: 16px; }
   .day-row { grid-template-columns: 1fr; }
+  /* Phones: no big heading, and editor sections fold open/closed from their titles. */
+  .hero-title, .hero-sub { display: none; }
+  .esec { padding: 14px 0; }
+  .esec-title { display: flex; align-items: center; min-height: var(--control-sm); cursor: pointer; }
+  .esec-title::before { content: ""; order: 2; margin-left: auto; width: 9px; height: 9px; border-right: 2px solid var(--muted); border-bottom: 2px solid var(--muted); transform: rotate(45deg); transition: transform .2s var(--ease); }
+  .esec.collapsed .esec-title::before { transform: rotate(-45deg); }
+  .esec.collapsed > :not(.esec-title) { display: none; }
   .day-row.closed .day-body { display: none; }
   .day-row.closed .day-head::after { content: "Closed"; margin-left: auto; color: var(--muted); font-size: 15px; }
   .sheet-foot { gap: 6px; }
@@ -1054,6 +1061,11 @@ dialog.modal::backdrop { background: rgba(43, 34, 48, .4); backdrop-filter: blur
               <label class="chip"><input type="radio" name="category" value="bakery"><span>Bakery</span></label>
               <label class="chip"><input type="radio" name="category" value="other"><span>Other</span></label>
             </div>
+          </div>
+          <div class="field">
+            <label for="eCuisine">Cuisine</label>
+            <input id="eCuisine" name="cuisine" class="input" list="cuisineOptions" placeholder="e.g. Chinese, Italian, Thai" autocomplete="wtfa-no-autofill">
+            <datalist id="cuisineOptions"></datalist>
           </div>
           <div class="field">
             <span class="label" id="visitedLabel">Have you been?</span>
@@ -1718,10 +1730,11 @@ dialog.modal::backdrop { background: rgba(43, 34, 48, .4); backdrop-filter: blur
       let { data, error } = await send(fields);
       // If the database hasn't had the "visited" column added yet (supabase/003_visited.sql), save everything
       // else rather than failing, and say what's missing.
-      if (error && /'visited' column/.test(error.message || "") && "visited" in fields) {
-        const { visited, ...rest } = fields;
+      const missing = (error?.message || "").match(/'(visited|cuisine)' column/)?.[1];
+      if (missing && missing in fields) {
+        const { [missing]: _, ...rest } = fields;
         ({ data, error } = await send(rest));
-        if (!error) toast("Saved, but “visited” needs a quick database update (supabase/003_visited.sql).");
+        if (!error) toast(`Saved, but “${missing}” needs a quick database update in Supabase.`);
       }
       if (error) throw error;
       return data;
@@ -2210,16 +2223,18 @@ dialog.modal::backdrop { background: rgba(43, 34, 48, .4); backdrop-filter: blur
       <div class="actions"><button class="btn btn-outline" type="button" onclick="location.reload()">Try again</button></div></div>`;
   }
   function refreshSuggestions() {
-    const areas = new Set(), tags = new Set();
+    const areas = new Set(), tags = new Set(), cuisines = new Set(["Chinese", "Italian", "Thai", "Vietnamese", "Japanese", "Korean", "Indian", "Greek", "Lebanese", "Middle Eastern", "Mexican", "French", "Spanish", "Malaysian", "Modern Australian", "Pizza", "Burgers", "Seafood", "Steak"]);
     for (const p of state.places) {
       if (p.suburb && p.postcode) areas.add(`${p.suburb} ${p.postcode}`);
       if (p.suburb) areas.add(p.suburb);
       if (p.postcode) areas.add(p.postcode);
       (p.tags || []).forEach((t) => tags.add(t));
+      if (p.cuisine) cuisines.add(p.cuisine);
     }
     const opts = (set) => [...set].sort((a, b) => a.localeCompare(b)).map((v) => `<option value="${esc(v)}">`).join("");
     $("#areaOptions").innerHTML = opts(areas);
     $("#tagOptions").innerHTML = opts(tags);
+    $("#cuisineOptions").innerHTML = opts(cuisines);
   }
 
   // ══════════════════════════════════════════════════════════
@@ -2240,7 +2255,7 @@ dialog.modal::backdrop { background: rgba(43, 34, 48, .4); backdrop-filter: blur
   function textMatch(p, q) {
     const nq = norm(q);
     if (!nq) return true;
-    const hay = norm([p.name, CATEGORY[p.category], (p.tags || []).join(" "), p.notes, p.booking_notes, p.parking_notes, p.transport_notes, p.hours_note].join(" "));
+    const hay = norm([p.name, CATEGORY[p.category], p.cuisine, (p.tags || []).join(" "), p.notes, p.booking_notes, p.parking_notes, p.transport_notes, p.hours_note].join(" "));
     return nq.split(" ").every((t) => hay.includes(t));
   }
   function bookingKind(p) {
@@ -2462,7 +2477,7 @@ dialog.modal::backdrop { background: rgba(43, 34, 48, .4); backdrop-filter: blur
   function cardHTML(p) {
     const st = status(p);
     const by = isSharedView() ? addedBy(p) : null;
-    const sub = [CATEGORY[p.category], [p.suburb, p.postcode].filter(Boolean).join(" "), by ? `added by ${by}` : ""].filter(Boolean).join(" · ");
+    const sub = [CATEGORY[p.category], p.cuisine, [p.suburb, p.postcode].filter(Boolean).join(" "), by ? `added by ${by}` : ""].filter(Boolean).join(" · ");
     const facts = [];
     const easeCls = (v) => (v === 3 ? "good" : v === 1 ? "bad" : "");
     if (p.max_group_size) facts.push(`<li>${ic("users")}Up to ${esc(p.max_group_size)}</li>`);
@@ -2951,7 +2966,7 @@ dialog.modal::backdrop { background: rgba(43, 34, 48, .4); backdrop-filter: blur
   function fillEditor(p) {
     form.reset();
     const el = F;
-    for (const k of ["name", "street", "suburb", "postcode", "phone", "website", "booking_url", "booking_notes", "parking_notes", "transport_notes", "notes", "public_rating", "max_group_size", "hours_note"]) {
+    for (const k of ["name", "cuisine", "street", "suburb", "postcode", "phone", "website", "booking_url", "booking_notes", "parking_notes", "transport_notes", "notes", "public_rating", "max_group_size", "hours_note"]) {
       el[k].value = p?.[k] ?? "";
     }
     el.state.value = p?.state || "";
@@ -3049,6 +3064,7 @@ dialog.modal::backdrop { background: rgba(43, 34, 48, .4); backdrop-filter: blur
       parking_notes: blankToNull(el.parking_notes.value.trim()),
       transport_ease: numOrNull(radio("transport_ease")),
       transport_notes: blankToNull(el.transport_notes.value.trim()),
+      cuisine: blankToNull(el.cuisine.value.trim()),
       visited: radio("visited") === "yes",
       tags,
       notes: blankToNull(el.notes.value.trim()),
@@ -3246,6 +3262,9 @@ dialog.modal::backdrop { background: rgba(43, 34, 48, .4); backdrop-filter: blur
     const phone = g.nationalPhoneNumber || null;
     const website = g.websiteUri || null;
     const category = mapCategory(g.primaryType, g.types);
+    // Google's place type often names the cuisine (chinese_restaurant → Chinese).
+    const cuisineType = [g.primaryType, ...(g.types || [])].find((t) => /^[a-z_]+_restaurant$/.test(t || "") && t !== "fast_food_restaurant");
+    const cuisine = cuisineType ? cap(cuisineType.replace(/_restaurant$/, "").replace(/_/g, " ")) : null;
     // Google's API has no "Food at bar" field, so for bars look for any other sign of food.
     const foodSignal = g.servesDessert === true || g.servesVegetarianFood === true
       || (g.types || []).some((t) => /(restaurant|meal_takeaway|meal_delivery|^food$)/.test(t));
@@ -3259,6 +3278,7 @@ dialog.modal::backdrop { background: rgba(43, 34, 48, .4); backdrop-filter: blur
       phone,
       website,
       category,
+      cuisine,
       price_level: PRICE_LEVELS[g.priceLevel] ?? null,
       hours: mapHours(g.regularOpeningHours),
       meals: meals.length ? meals : null,
@@ -3281,7 +3301,7 @@ dialog.modal::backdrop { background: rgba(43, 34, 48, .4); backdrop-filter: blur
     const mark = (node) => node?.closest(".switch-row, .field, .esec")?.classList.add("prefilled");
     // The name box holds what was searched for, so the place's proper name always replaces it.
     if (m.name && el.name.value !== m.name) { el.name.value = m.name; mark(el.name); n++; }
-    for (const k of ["street", "suburb", "postcode", "phone", "website"]) {
+    for (const k of ["cuisine", "street", "suburb", "postcode", "phone", "website"]) {
       if (m[k] && (replace || !el[k].value.trim()) && el[k].value !== m[k]) { el[k].value = m[k]; mark(el[k]); n++; }
     }
     if (m.state && (replace || !el.state.value) && el.state.value !== m.state) { el.state.value = m.state; mark(el.state); n++; }
@@ -3389,9 +3409,26 @@ dialog.modal::backdrop { background: rgba(43, 34, 48, .4); backdrop-filter: blur
     editorSnapshot = JSON.stringify(collectForm().place);
     editDlg.showModal();
     $("#editBody").scrollTop = 0;
+    // Phones: start with only the first section open so every section heading is easy to reach.
+    $$(".esec", form).forEach((sec, i) => setSection(sec, !isPhone() || i === 0));
     // On touch screens don't pop the keyboard straight away: it hides half the form. Desktop gets focus.
     if (!p && !isTouch()) F.name.focus();
   }
+  function setSection(sec, open) {
+    sec.classList.toggle("collapsed", !open);
+    $(".esec-title", sec)?.setAttribute("aria-expanded", String(open));
+  }
+  $$(".esec-title", form).forEach((h) => { h.tabIndex = 0; h.setAttribute("role", "button"); });
+  const toggleSection = (e) => {
+    const h = e.target.closest(".esec-title");
+    if (!h || !isPhone()) return;
+    if (e.type === "keydown" && e.key !== "Enter" && e.key !== " ") return;
+    e.preventDefault();
+    const sec = h.closest(".esec");
+    setSection(sec, sec.classList.contains("collapsed"));
+  };
+  form.addEventListener("click", toggleSection);
+  form.addEventListener("keydown", toggleSection);
   const isDirty = () => JSON.stringify(collectForm().place) !== editorSnapshot;
   function requestCloseEditor() {
     if (isDirty() && !confirm("Discard your changes?")) return;
@@ -3410,6 +3447,7 @@ dialog.modal::backdrop { background: rgba(43, 34, 48, .4); backdrop-filter: blur
       invalid.forEach((x) => x.setAttribute("aria-invalid", "true"));
       const box = $("#editErrors");
       box.hidden = false;
+      $$(".esec", form).forEach((sec) => setSection(sec, true));
       box.innerHTML = `<strong>Almost there. Please check:</strong><ul>${errors.map((x) => `<li>${esc(x)}</li>`).join("")}</ul>`;
       $("#editBody").scrollTo({ top: 0, behavior: "smooth" });
       invalid[0]?.focus({ preventScroll: true });
