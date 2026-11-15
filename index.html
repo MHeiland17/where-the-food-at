@@ -687,6 +687,8 @@ dialog.modal::backdrop { background: rgba(43, 34, 48, .4); backdrop-filter: blur
   .sheet-body { padding: 4px 20px 24px; }
   .sheet-foot { padding: 14px 20px calc(14px + env(safe-area-inset-bottom)); }
   .row { --cols: 1 !important; }
+  /* 16px+ stops iPhones zooming into the page when a field is tapped. */
+  .input, .select, textarea.input, .tag-box input, .span-row .select { font-size: 16px; }
   .day-row { grid-template-columns: 1fr; }
   .day-row.closed .day-body { display: none; }
   .day-row.closed .day-head::after { content: "Closed"; margin-left: auto; color: var(--muted); font-size: 15px; }
@@ -771,7 +773,7 @@ dialog.modal::backdrop { background: rgba(43, 34, 48, .4); backdrop-filter: blur
         <label for="fArea">Near</label>
         <div class="pl-input">
           <i data-ic="pin"></i>
-          <input id="fArea" data-f="area" list="areaOptions" placeholder="Postcode, suburb or street" autocomplete="off" enterkeyhint="search">
+          <input id="fArea" data-f="area" list="areaOptions" placeholder="Postcode, suburb or street" autocomplete="wtfa-no-autofill" enterkeyhint="search">
           <button type="button" class="clear-x" id="clearArea" aria-label="Clear area" hidden><i data-ic="x"></i></button>
         </div>
         <datalist id="areaOptions"></datalist>
@@ -780,12 +782,12 @@ dialog.modal::backdrop { background: rgba(43, 34, 48, .4); backdrop-filter: blur
         <label for="fDay">When</label>
         <div class="pl-input">
           <i data-ic="calendar"></i>
-          <select id="fDay" data-f="day" class="bare-select">
+          <select id="fDay" data-f="day" class="bare-select" autocomplete="wtfa-no-autofill">
             <option value="">Any day</option>
             <option value="0">Monday</option><option value="1">Tuesday</option><option value="2">Wednesday</option>
             <option value="3">Thursday</option><option value="4">Friday</option><option value="5">Saturday</option><option value="6">Sunday</option>
           </select>
-          <input id="fTime" type="time" data-f="time" aria-label="Time">
+          <input id="fTime" autocomplete="wtfa-no-autofill" type="time" data-f="time" aria-label="Time">
         </div>
       </div>
       <div class="pl-field pl-guests">
@@ -793,7 +795,7 @@ dialog.modal::backdrop { background: rgba(43, 34, 48, .4); backdrop-filter: blur
         <div class="pl-input">
           <i data-ic="users"></i>
           <button type="button" class="step-btn" data-step="-1" aria-label="Fewer guests">−</button>
-          <input id="fGroup" data-f="group" type="number" min="1" max="99" inputmode="numeric" placeholder="Any">
+          <input id="fGroup" autocomplete="wtfa-no-autofill" data-f="group" type="number" min="1" max="99" inputmode="numeric" placeholder="Any">
           <button type="button" class="step-btn" data-step="1" aria-label="More guests">+</button>
         </div>
       </div>
@@ -823,7 +825,7 @@ dialog.modal::backdrop { background: rgba(43, 34, 48, .4); backdrop-filter: blur
       <div class="toolbar-right">
         <div class="search-mini">
           <i data-ic="search"></i>
-          <input class="input" id="fText" data-f="text" type="search" placeholder="Search names, tags, notes" aria-label="Search names, tags and notes">
+          <input class="input" id="fText" autocomplete="wtfa-no-autofill" data-f="text" type="search" placeholder="Search names, tags, notes" aria-label="Search names, tags and notes">
         </div>
         <label><span class="sr-only">Sort by</span>
           <select id="sortBy" class="select sort-select">
@@ -962,7 +964,7 @@ dialog.modal::backdrop { background: rgba(43, 34, 48, .4); backdrop-filter: blur
 
 <!-- ═════════════════════════════ Editor sheet ═════════════════════════════ -->
 <dialog id="editDlg" class="sheet wide" aria-labelledby="editTitle">
-  <form id="editForm" novalidate>
+  <form id="editForm" novalidate autocomplete="off" data-form-type="other" data-lpignore="true">
     <div class="sheet-head">
       <div><p class="eyebrow" id="editEyebrow">New place</p><h2 id="editTitle">Add a place</h2></div>
       <button type="button" class="icon-btn" data-editor-close aria-label="Close"><i data-ic="x"></i></button>
@@ -974,9 +976,9 @@ dialog.modal::backdrop { background: rgba(43, 34, 48, .4); backdrop-filter: blur
         <h3 class="esec-title">The basics</h3>
         <div class="esec-body">
           <div class="field">
-            <label for="eName">Name <span class="req">required</span></label>
+            <label for="eVenue">Name <span class="req">required</span></label>
             <div class="name-row">
-              <input id="eName" name="name" class="input" placeholder="e.g. Golden Lantern Dumpling House" autocomplete="off" enterkeyhint="search">
+              <input id="eVenue" name="pl_v1" class="input" placeholder="e.g. Golden Lantern Dumpling House" autocomplete="wtfa-no-autofill" enterkeyhint="search">
               <button type="button" class="btn btn-soft" id="gSearchBtn"><i data-ic="search"></i>Search</button>
             </div>
             <p class="help" id="gHint">Search Google to fill in the details for you, or just type everything yourself.</p>
@@ -1002,17 +1004,17 @@ dialog.modal::backdrop { background: rgba(43, 34, 48, .4); backdrop-filter: blur
         <h3 class="esec-title">Where it is</h3>
         <p class="esec-help">Suburb and postcode power the “Near” search.</p>
         <div class="esec-body">
-          <div class="field"><label for="eStreet">Street address</label><input id="eStreet" name="street" class="input" placeholder="12 Station St" autocomplete="off"></div>
+          <div class="field"><label for="eLoc1">Street address</label><input id="eLoc1" name="pl_l1" class="input" placeholder="12 Station St" autocomplete="wtfa-no-autofill"></div>
           <div class="row" style="--cols:3">
-            <div class="field"><label for="eSuburb">Suburb</label><input id="eSuburb" name="suburb" class="input" placeholder="Box Hill" autocomplete="off"></div>
-            <div class="field"><label for="ePostcode">Postcode</label><input id="ePostcode" name="postcode" class="input" inputmode="numeric" maxlength="4" placeholder="3128" autocomplete="off"></div>
-            <div class="field"><label for="eState">State</label>
-              <select id="eState" name="state" class="select"><option value="">Choose…</option><option>VIC</option><option>NSW</option><option>QLD</option><option>SA</option><option>WA</option><option>TAS</option><option>ACT</option><option>NT</option></select>
+            <div class="field"><label for="eLoc2">Suburb</label><input id="eLoc2" name="pl_l2" class="input" placeholder="Box Hill" autocomplete="wtfa-no-autofill"></div>
+            <div class="field"><label for="eLoc3">Postcode</label><input id="eLoc3" name="pl_l3" class="input" inputmode="numeric" maxlength="4" placeholder="3128" autocomplete="wtfa-no-autofill"></div>
+            <div class="field"><label for="eLoc4">State</label>
+              <select id="eLoc4" name="pl_l4" class="select" autocomplete="wtfa-no-autofill"><option value="">Choose…</option><option>VIC</option><option>NSW</option><option>QLD</option><option>SA</option><option>WA</option><option>TAS</option><option>ACT</option><option>NT</option></select>
             </div>
           </div>
           <div class="row">
-            <div class="field"><label for="ePhone">Phone</label><input id="ePhone" name="phone" class="input" type="tel" placeholder="03 9000 0000" autocomplete="off"></div>
-            <div class="field"><label for="eWebsite">Website</label><input id="eWebsite" name="website" class="input" type="url" placeholder="example.com" autocomplete="off"></div>
+            <div class="field"><label for="eCon1">Phone</label><input id="eCon1" name="pl_c1" class="input" type="text" inputmode="tel" placeholder="03 9000 0000" autocomplete="wtfa-no-autofill"></div>
+            <div class="field"><label for="eCon2">Website</label><input id="eCon2" name="pl_c2" class="input" type="url" placeholder="example.com" autocomplete="wtfa-no-autofill"></div>
           </div>
         </div>
       </section>
@@ -1043,12 +1045,12 @@ dialog.modal::backdrop { background: rgba(43, 34, 48, .4); backdrop-filter: blur
           <div class="row" style="margin-top:24px">
             <div class="field">
               <label for="eKitchen">Kitchen closes</label>
-              <select id="eKitchen" name="kitchen_closes" class="select"></select>
+              <select id="eKitchen" name="kitchen_closes" class="select" autocomplete="wtfa-no-autofill"></select>
               <p class="help">Leave as is if food is served until closing.</p>
             </div>
             <div class="field">
               <label for="eHoursNote">Hours note</label>
-              <input id="eHoursNote" name="hours_note" class="input" placeholder="e.g. Last orders 30 min before close" autocomplete="off">
+              <input id="eHoursNote" name="hours_note" class="input" placeholder="e.g. Last orders 30 min before close" autocomplete="wtfa-no-autofill">
             </div>
           </div>
         </div>
@@ -1104,7 +1106,7 @@ dialog.modal::backdrop { background: rgba(43, 34, 48, .4); backdrop-filter: blur
             <label for="eGroup">Largest group that fits comfortably</label>
             <div class="stepper">
               <button type="button" class="step-btn" data-estep="-1" aria-label="Smaller group">−</button>
-              <input id="eGroup" name="max_group_size" class="input" type="number" min="1" max="200" inputmode="numeric" placeholder="—">
+              <input id="eGroup" autocomplete="wtfa-no-autofill" name="max_group_size" class="input" type="number" min="1" max="200" inputmode="numeric" placeholder="—">
               <button type="button" class="step-btn" data-estep="1" aria-label="Larger group">+</button>
             </div>
           </div>
@@ -1130,11 +1132,11 @@ dialog.modal::backdrop { background: rgba(43, 34, 48, .4); backdrop-filter: blur
           </div>
           <div class="field" id="bookingUrlField" hidden>
             <label for="eBookingUrl">Booking link</label>
-            <input id="eBookingUrl" name="booking_url" class="input" type="url" placeholder="Leave blank to use the website" autocomplete="off">
+            <input id="eBookingUrl" name="booking_url" class="input" type="url" placeholder="Leave blank to use the website" autocomplete="wtfa-no-autofill">
           </div>
           <div class="field">
             <label for="eBookingNotes">Booking notes</label>
-            <input id="eBookingNotes" name="booking_notes" class="input" placeholder="e.g. Book 2 weeks ahead for weekends, ask for the back room" autocomplete="off">
+            <input id="eBookingNotes" name="booking_notes" class="input" placeholder="e.g. Book 2 weeks ahead for weekends, ask for the back room" autocomplete="wtfa-no-autofill">
           </div>
         </div>
       </section>
@@ -1153,7 +1155,7 @@ dialog.modal::backdrop { background: rgba(43, 34, 48, .4); backdrop-filter: blur
           </div>
           <div class="field">
             <label for="eParkingNotes">Parking notes</label>
-            <input id="eParkingNotes" name="parking_notes" class="input" placeholder="e.g. Free car park behind, 2-hour limit" autocomplete="off">
+            <input id="eParkingNotes" name="parking_notes" class="input" placeholder="e.g. Free car park behind, 2-hour limit" autocomplete="wtfa-no-autofill">
           </div>
           <div class="field">
             <span class="label">Public transport</span>
@@ -1166,7 +1168,7 @@ dialog.modal::backdrop { background: rgba(43, 34, 48, .4); backdrop-filter: blur
           </div>
           <div class="field">
             <label for="eTransportNotes">Public transport notes</label>
-            <input id="eTransportNotes" name="transport_notes" class="input" placeholder="e.g. Tram 109 stops out front, station 5 min walk" autocomplete="off">
+            <input id="eTransportNotes" name="transport_notes" class="input" placeholder="e.g. Tram 109 stops out front, station 5 min walk" autocomplete="wtfa-no-autofill">
           </div>
         </div>
       </section>
@@ -1177,7 +1179,7 @@ dialog.modal::backdrop { background: rgba(43, 34, 48, .4); backdrop-filter: blur
           <div class="row">
             <div class="field">
               <label for="ePublic">Public rating</label>
-              <input id="ePublic" name="public_rating" class="input" type="number" min="0" max="5" step="0.1" placeholder="e.g. 4.4" inputmode="decimal">
+              <input id="ePublic" autocomplete="wtfa-no-autofill" name="public_rating" class="input" type="number" min="0" max="5" step="0.1" placeholder="e.g. 4.4" inputmode="decimal">
               <p class="help">From Google, Yelp or similar, out of 5.</p>
             </div>
             <div class="field">
@@ -1197,13 +1199,13 @@ dialog.modal::backdrop { background: rgba(43, 34, 48, .4); backdrop-filter: blur
             <label for="tagEntry">Tags</label>
             <div class="tag-box" id="tagBox">
               <span id="tagList" style="display:contents"></span>
-              <input id="tagEntry" list="tagOptions" placeholder="Type a tag, press Enter" autocomplete="off" enterkeyhint="enter">
+              <input id="tagEntry" list="tagOptions" placeholder="Type a tag, press Enter" autocomplete="wtfa-no-autofill" enterkeyhint="enter">
             </div>
             <datalist id="tagOptions"></datalist>
           </div>
           <div class="field">
             <label for="eNotes">Notes</label>
-            <textarea id="eNotes" name="notes" class="input" placeholder="Favourite dishes, who loved it, anything worth remembering"></textarea>
+            <textarea id="eNotes" autocomplete="wtfa-no-autofill" name="notes" class="input" placeholder="Favourite dishes, who loved it, anything worth remembering"></textarea>
           </div>
         </div>
       </section>
@@ -1212,7 +1214,7 @@ dialog.modal::backdrop { background: rgba(43, 34, 48, .4); backdrop-filter: blur
       <button type="button" class="btn btn-danger" id="deleteBtn" hidden><i data-ic="trash"></i>Delete</button>
       <span class="grow"></span>
       <button type="button" class="btn btn-ghost" data-editor-close>Cancel</button>
-      <button type="submit" class="btn btn-primary" id="saveBtn">Save place</button>
+      <button type="button" class="btn btn-primary" id="saveBtn">Save place</button>
     </div>
   </form>
 </dialog>
@@ -1648,6 +1650,11 @@ dialog.modal::backdrop { background: rgba(43, 34, 48, .4); backdrop-filter: blur
   }
 
   document.addEventListener("click", (e) => { const m = $("#userMenu"); if (m.open && !m.contains(e.target)) m.open = false; });
+  // Scrolling the page with the mouse over a focused number box shouldn't silently change its value.
+  document.addEventListener("wheel", (e) => {
+    const a = document.activeElement;
+    if (a && a.type === "number" && a === e.target) a.blur();
+  }, { passive: true });
 
   // ══════════════════════════════════════════════════════════
   // Loading
@@ -2114,6 +2121,23 @@ dialog.modal::backdrop { background: rgba(43, 34, 48, .4); backdrop-filter: blur
   // ══════════════════════════════════════════════════════════
   const editDlg = $("#editDlg");
   const form = $("#editForm");
+  // The address-like inputs have deliberately bland HTML names (pl_v1, pl_l1, …) so browsers don't mistake
+  // them for *your* name and address and offer autofill or "save address?". Code still uses the real names.
+  const FIELD_ALIAS = { name: "pl_v1", street: "pl_l1", suburb: "pl_l2", postcode: "pl_l3", state: "pl_l4", phone: "pl_c1", website: "pl_c2" };
+  const F = new Proxy(form.elements, { get: (t, k) => t[typeof k === "string" && FIELD_ALIAS[k] ? FIELD_ALIAS[k] : k] });
+  // Password managers (LastPass, 1Password, Bitwarden, Dashlane) have their own opt-out attributes.
+  for (const el of $$("#editForm input, #editForm select, #editForm textarea, .planner input, .planner select, #fText")) {
+    el.setAttribute("data-lpignore", "true");
+    el.setAttribute("data-1p-ignore", "");
+    el.setAttribute("data-bwignore", "");
+    el.setAttribute("data-form-type", "other");
+  }
+  // No red squiggles or auto-capitals on names, codes, numbers and links.
+  for (const el of $$("#eVenue, #eLoc3, #eCon1, #eCon2, #eBookingUrl, #tagEntry, #fArea, #fText")) {
+    el.spellcheck = false;
+    el.setAttribute("autocorrect", "off");
+    if (el.id !== "eVenue" && el.id !== "fArea") el.setAttribute("autocapitalize", "off");
+  }
   let editorTags = [];
   let editorSnapshot = "";
   let mealsAuto = true;
@@ -2168,7 +2192,7 @@ dialog.modal::backdrop { background: rgba(43, 34, 48, .4); backdrop-filter: blur
     const spans = $$(`[data-day-body="${d}"] .span-row`).map((r) => [$("[data-role=open]", r).value, $("[data-role=close]", r).value]);
     return { open, spans };
   }
-  const radio = (name) => form.elements[name].value;
+  const radio = (name) => F[name].value;
   function setRadio(name, v) { for (const r of form.querySelectorAll(`input[type=radio][name="${name}"]`)) r.checked = r.value === String(v ?? ""); }
 
   // Read the hours editor. Returns the hours object and any problems found.
@@ -2196,7 +2220,7 @@ dialog.modal::backdrop { background: rgba(43, 34, 48, .4); backdrop-filter: blur
   const periodBoxes = () => $$('input[name="meals"]', form);
   function applyAutoMeals() {
     if (!mealsAuto) return;
-    const derived = deriveMeals(readHours().hours, form.elements.kitchen_closes.value || null);
+    const derived = deriveMeals(readHours().hours, F.kitchen_closes.value || null);
     periodBoxes().forEach((c) => (c.checked = derived.includes(c.value)));
   }
   function refreshFoodUI() {
@@ -2295,14 +2319,14 @@ dialog.modal::backdrop { background: rgba(43, 34, 48, .4); backdrop-filter: blur
 
   // Hearts (our rating)
   function renderStars(v) {
-    form.elements.our_rating.value = v ? String(v) : "";
+    F.our_rating.value = v ? String(v) : "";
     $("#stars").innerHTML = [1, 2, 3, 4, 5].map((n) =>
       `<button type="button" class="star-btn ${v >= n ? "on" : ""}" role="radio" aria-checked="${v === n}" aria-label="${plural(n, "heart")}" data-star="${n}">${ic("heart", v >= n ? "ic-fill" : "")}</button>`).join("");
   }
   $("#stars").addEventListener("click", (e) => {
     const n = Number(e.target.closest("[data-star]")?.dataset.star);
     if (!n) return;
-    const cur = numOrNull(form.elements.our_rating.value);
+    const cur = numOrNull(F.our_rating.value);
     renderStars(cur === n ? null : n);
     $(`[data-star="${cur === n ? 1 : n}"]`)?.focus();
   });
@@ -2334,7 +2358,7 @@ dialog.modal::backdrop { background: rgba(43, 34, 48, .4); backdrop-filter: blur
 
   function fillEditor(p) {
     form.reset();
-    const el = form.elements;
+    const el = F;
     for (const k of ["name", "street", "suburb", "postcode", "phone", "website", "booking_url", "booking_notes", "parking_notes", "transport_notes", "notes", "public_rating", "max_group_size", "hours_note"]) {
       el[k].value = p?.[k] ?? "";
     }
@@ -2379,7 +2403,7 @@ dialog.modal::backdrop { background: rgba(43, 34, 48, .4); backdrop-filter: blur
   }
 
   function collectForm() {
-    const el = form.elements;
+    const el = F;
     const errors = [], invalid = [];
     const name = el.name.value.trim();
     if (!name) { errors.push("Give this place a name."); invalid.push(el.name); }
@@ -2476,14 +2500,14 @@ dialog.modal::backdrop { background: rgba(43, 34, 48, .4); backdrop-filter: blur
   const resultsFoot = (withClose) =>
     `<div class="g-foot"><span>${DEMO ? "Demo results (made up)" : "Powered by Google"}</span>${withClose ? '<button type="button" class="link-btn" data-g-close>Close</button>' : ""}</div>`;
   function nearHint() {
-    const el = form.elements;
+    const el = F;
     return [el.suburb.value.trim(), el.postcode.value.trim(), el.state.value].filter(Boolean).join(" ");
   }
 
   async function runSearch() {
-    const q = form.elements.name.value.trim();
+    const q = F.name.value.trim();
     if (q.length < 2) {
-      form.elements.name.focus();
+      F.name.focus();
       showResults(`<div class="g-msg">Type at least 2 letters of the name, then search.</div>`);
       return;
     }
@@ -2518,9 +2542,9 @@ dialog.modal::backdrop { background: rgba(43, 34, 48, .4); backdrop-filter: blur
     }
   }
   $("#gSearchBtn").addEventListener("click", runSearch);
-  form.elements.name.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); runSearch(); } });
+  F.name.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); runSearch(); } });
   $("#gResults").addEventListener("click", (e) => {
-    if (e.target.closest("[data-g-close]")) { showResults(""); form.elements.name.focus(); return; }
+    if (e.target.closest("[data-g-close]")) { showResults(""); F.name.focus(); return; }
     const i = e.target.closest("[data-g-pick]")?.dataset.gPick;
     if (i == null) return;
     const p = lastResults[Number(i)];
@@ -2528,7 +2552,7 @@ dialog.modal::backdrop { background: rgba(43, 34, 48, .4); backdrop-filter: blur
   });
   $("#gLinked").addEventListener("click", (e) => {
     if (e.target.id === "gRefresh") {
-      const el = form.elements;
+      const el = F;
       const address = [el.street.value, [el.suburb.value, el.state.value, el.postcode.value].filter(Boolean).join(" ")].filter((s) => s.trim()).join(", ");
       openPrefill({ id: editorGoogle.id, name: el.name.value.trim(), address, refresh: true });
     }
@@ -2649,7 +2673,7 @@ dialog.modal::backdrop { background: rgba(43, 34, 48, .4); backdrop-filter: blur
 
   // Put mapped values into the form. Returns how many fields were filled.
   function applyPrefill(m, replace) {
-    const el = form.elements;
+    const el = F;
     let n = 0;
     const mark = (node) => node?.closest(".switch-row, .field, .esec")?.classList.add("prefilled");
     // The name box holds what was searched for, so the place's proper name always replaces it.
@@ -2755,7 +2779,7 @@ dialog.modal::backdrop { background: rgba(43, 34, 48, .4); backdrop-filter: blur
     editorSnapshot = JSON.stringify(collectForm().place);
     editDlg.showModal();
     $("#editBody").scrollTop = 0;
-    if (!p) form.elements.name.focus();
+    if (!p) F.name.focus();
   }
   const isDirty = () => JSON.stringify(collectForm().place) !== editorSnapshot;
   function requestCloseEditor() {
@@ -2765,8 +2789,10 @@ dialog.modal::backdrop { background: rgba(43, 34, 48, .4); backdrop-filter: blur
   editDlg.addEventListener("cancel", (e) => { e.preventDefault(); requestCloseEditor(); });
   $$("[data-editor-close]", editDlg).forEach((b) => b.addEventListener("click", requestCloseEditor));
 
-  form.addEventListener("submit", async (e) => {
-    e.preventDefault();
+  // Saving is a plain button click, not a form submission, so browsers don't treat it as
+  // "you just filled in an address form" and offer to store it.
+  form.addEventListener("submit", (e) => e.preventDefault());
+  $("#saveBtn").addEventListener("click", async () => {
     const { place, errors, invalid } = collectForm();
     $$("[aria-invalid]", form).forEach((x) => x.removeAttribute("aria-invalid"));
     if (errors.length) {
