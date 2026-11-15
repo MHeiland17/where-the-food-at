@@ -667,7 +667,10 @@ dialog.modal::backdrop { background: rgba(43, 34, 48, .4); backdrop-filter: blur
 .toast .btn:hover { background: rgba(255, 255, 255, .1); }
 @keyframes toastIn { from { transform: translateY(12px); opacity: 0; } }
 .fab {
-  display: none; position: fixed; right: 20px; bottom: calc(20px + env(safe-area-inset-bottom)); z-index: 40;
+  display: none; position: fixed; right: 20px; z-index: 40;
+  /* Pinned from the top using the smallest visible screen height (svh), so it doesn't jump when the
+     phone browser's address bar / toolbar slides in or out while scrolling. */
+  top: calc(100vh - 80px - env(safe-area-inset-bottom)); top: calc(100svh - 80px - env(safe-area-inset-bottom));
   width: 60px; height: 60px; border-radius: 50%; border: 0; background: var(--accent); color: #fff;
   box-shadow: 0 12px 28px rgba(113, 63, 215, .4); place-items: center;
 }
@@ -721,11 +724,11 @@ dialog.modal::backdrop { background: rgba(43, 34, 48, .4); backdrop-filter: blur
   .list { margin-top: 20px; }
   .fab { display: grid; }
   dialog.sheet, dialog.sheet.wide {
-    inset: auto 0 0 0; width: 100vw; height: auto; max-height: 92vh; max-height: 92dvh; border-radius: var(--r-lg) var(--r-lg) 0 0;
+    inset: auto 0 0 0; width: 100vw; height: auto; max-height: 92vh; max-height: 92svh; border-radius: var(--r-lg) var(--r-lg) 0 0;
   }
   /* The add/edit form and place details are full-screen on phones (the full visible height),
      so nothing sits above the screen and the details get the whole page. */
-  dialog#editDlg, dialog#detailDlg { inset: 0; height: 100vh; height: 100dvh; max-height: 100vh; max-height: 100dvh; border-radius: 0; }
+  dialog#editDlg, dialog#detailDlg { inset: 0 0 auto 0; height: 100vh; height: 100svh; max-height: 100vh; max-height: 100svh; border-radius: 0; }
   dialog.sheet[open] { animation-name: sheetUp; }
   @keyframes sheetUp { from { transform: translateY(60px); opacity: 0; } to { transform: none; opacity: 1; } }
   .sheet-head { padding: 22px 20px 16px; }
