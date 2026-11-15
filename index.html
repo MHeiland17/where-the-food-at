@@ -2746,7 +2746,9 @@ dialog.modal::backdrop { background: rgba(43, 34, 48, .4); backdrop-filter: blur
       alcohol: licensed ? "licensed" : null,
       delivery: typeof g.delivery === "boolean" ? g.delivery : null,
       takeaway: typeof g.takeout === "boolean" ? g.takeout : null,
-      booking_method: g.reservable === true ? (website ? "online" : phone ? "phone" : null) : g.reservable === false ? "walk_in" : null,
+      // Google only says *whether* a place takes reservations, not how, and gives no booking link.
+      // So "Book online" is never guessed: bookings + a phone number means "call to book".
+      booking_method: g.reservable === true ? (phone ? "phone" : null) : g.reservable === false ? "walk_in" : null,
       public_rating: typeof g.rating === "number" ? Math.round(g.rating * 10) / 10 : null,
       parking_ease: mapParking(g.parkingOptions),
     };
