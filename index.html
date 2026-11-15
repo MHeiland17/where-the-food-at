@@ -405,16 +405,12 @@ textarea.input { height: auto; min-height: 110px; padding: 12px 14px; resize: ve
 
 /* ── Card (horizontal row in a vertical list) ── */
 .card {
-  position: relative; display: grid; grid-template-columns: 56px minmax(0, 1fr) auto; gap: 20px; align-items: start;
+  position: relative; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 24px; align-items: start;
   padding: 24px 28px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg);
   box-shadow: var(--shadow-sm);
   transition: transform .2s var(--ease), box-shadow .2s var(--ease), border-color .2s var(--ease);
 }
 .card:hover { transform: translateY(-2px); box-shadow: var(--shadow); border-color: var(--rose-100); }
-.avatar {
-  display: grid; place-items: center; width: 56px; height: 56px; border-radius: 18px; flex: none;
-  font-family: var(--font-display); font-weight: 600; font-size: 20px;
-}
 .card-main { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
 .card-title h3 { font-family: var(--font-display); font-weight: 600; font-size: 22px; line-height: 1.2; letter-spacing: -.01em; }
 .stretch { all: unset; cursor: pointer; }
@@ -478,9 +474,12 @@ textarea.input { height: auto; min-height: 110px; padding: 12px 14px; resize: ve
 /* ════════════════════════════════════════════════════════════
    Sheets (dialogs)
    ════════════════════════════════════════════════════════════ */
+/* Sheets: the header and footer stay put; only .sheet-body scrolls.
+   Heights use dvh (the *visible* screen) with vh as a fallback, because on phones 100vh can be taller
+   than what's actually showing, which pushes the top of a bottom-anchored sheet off-screen. */
 dialog.sheet {
-  position: fixed; inset: 0 0 0 auto; margin: 0; padding: 0; border: 0;
-  width: min(480px, 100vw); height: 100vh; max-height: 100vh; max-width: 100vw;
+  position: fixed; inset: 0 0 0 auto; margin: 0; padding: 0; border: 0; overflow: hidden;
+  width: min(480px, 100vw); height: 100vh; height: 100dvh; max-height: 100vh; max-height: 100dvh; max-width: 100vw;
   background: var(--surface); color: var(--ink); box-shadow: var(--shadow-lg);
   border-radius: var(--r-lg) 0 0 var(--r-lg);
 }
@@ -490,13 +489,13 @@ dialog.sheet::backdrop { background: rgba(43, 34, 48, .32); backdrop-filter: blu
 @keyframes sheetIn { from { transform: translateX(40px); opacity: 0; } to { transform: none; opacity: 1; } }
 @keyframes fadeIn { from { opacity: 0; } }
 .sheet > form { display: flex; flex-direction: column; height: 100%; min-height: 0; }
-.sheet-head { display: flex; align-items: flex-start; gap: 16px; padding: 28px 32px 20px; border-bottom: 1px solid var(--line); }
+.sheet-head { flex: none; display: flex; align-items: flex-start; gap: 16px; padding: 28px 32px 20px; border-bottom: 1px solid var(--line); background: var(--surface); }
 .sheet-head > div { flex: 1; min-width: 0; }
 .sheet-head h2 { font-family: var(--font-display); font-weight: 600; font-size: 26px; letter-spacing: -.01em; line-height: 1.2; }
 .eyebrow { font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--rose); margin-bottom: 6px; }
-.sheet-body { flex: 1; overflow-y: auto; padding: 8px 32px 32px; overscroll-behavior: contain; }
+.sheet-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 8px 32px 32px; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
 .sheet-foot {
-  display: flex; align-items: center; gap: 12px; padding: 18px 32px calc(18px + env(safe-area-inset-bottom));
+  flex: none; display: flex; align-items: center; gap: 12px; padding: 18px 32px calc(18px + env(safe-area-inset-bottom));
   border-top: 1px solid var(--line); background: var(--surface);
 }
 .sheet-foot .grow { flex: 1; }
@@ -563,8 +562,8 @@ dialog.sheet::backdrop { background: rgba(43, 34, 48, .32); backdrop-filter: blu
 .tag-chip .ic { width: 13px; height: 13px; }
 
 /* Detail sheet */
-.detail-head { display: flex; gap: 16px; align-items: flex-start; }
-.detail-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 24px; }
+.detail-status { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 14px; margin-top: 10px; }
+.detail-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
 .glance { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 16px; }
 .tile { padding: 14px 16px; border-radius: var(--r); background: var(--surface-2); }
 .tile small { display: block; font-size: 12px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); }
@@ -660,8 +659,7 @@ dialog.modal::backdrop { background: rgba(43, 34, 48, .4); backdrop-filter: blur
   .auth-form { border-radius: 0 0 var(--r-lg) var(--r-lg); padding: 40px; }
 }
 @media (max-width: 720px) {
-  .card { grid-template-columns: 48px minmax(0, 1fr); gap: 16px; padding: 20px; }
-  .avatar { width: 48px; height: 48px; border-radius: 14px; font-size: 17px; }
+  .card { grid-template-columns: minmax(0, 1fr); gap: 16px; padding: 20px; }
   .card-title h3 { font-size: 20px; }
   .card-side {
     grid-column: 1 / -1; flex-direction: row; align-items: center; min-width: 0;
@@ -695,8 +693,10 @@ dialog.modal::backdrop { background: rgba(43, 34, 48, .4); backdrop-filter: blur
   .list { margin-top: 20px; }
   .fab { display: grid; }
   dialog.sheet, dialog.sheet.wide {
-    inset: auto 0 0 0; width: 100vw; height: auto; max-height: 92vh; border-radius: var(--r-lg) var(--r-lg) 0 0;
+    inset: auto 0 0 0; width: 100vw; height: auto; max-height: 92vh; max-height: 92dvh; border-radius: var(--r-lg) var(--r-lg) 0 0;
   }
+  /* Adding/editing is a full-screen form on phones, so the top fields can't end up above the screen. */
+  dialog#editDlg { inset: 0; height: 100vh; height: 100dvh; max-height: 100vh; max-height: 100dvh; border-radius: 0; }
   dialog.sheet[open] { animation-name: sheetUp; }
   @keyframes sheetUp { from { transform: translateY(60px); opacity: 0; } to { transform: none; opacity: 1; } }
   .sheet-head { padding: 22px 20px 16px; }
@@ -1327,12 +1327,6 @@ dialog.modal::backdrop { background: rgba(43, 34, 48, .4); backdrop-filter: blur
   const pad = (n) => String(n).padStart(2, "0");
   const todayIdx = () => (new Date().getDay() + 6) % 7; // Mon = 0
   const nowHHMM = () => { const d = new Date(); return `${pad(d.getHours())}:${pad(d.getMinutes())}`; };
-  const hue = (name) => { let h = 0; for (const ch of String(name)) h = (h * 31 + ch.charCodeAt(0)) % 360; return h; };
-  const initials = (name) => String(name).split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0].toUpperCase()).join("");
-  const avatar = (name) => {
-    const h = hue(name);
-    return `<span class="avatar" style="background:hsl(${h} 70% 94%);color:hsl(${h} 38% 36%)" aria-hidden="true">${esc(initials(name))}</span>`;
-  };
 
   // ══════════════════════════════════════════════════════════
   // Time & opening hours
@@ -1670,6 +1664,14 @@ dialog.modal::backdrop { background: rgba(43, 34, 48, .4); backdrop-filter: blur
     const a = document.activeElement;
     if (a && a.type === "number" && a === e.target) a.blur();
   }, { passive: true });
+  // On phones, once the keyboard has slid up, bring the field being typed into back into view.
+  const isPhone = () => matchMedia("(max-width: 640px)").matches;
+  const isTouch = () => matchMedia("(pointer: coarse)").matches;
+  document.addEventListener("focusin", (e) => {
+    const t = e.target;
+    if (!isPhone() || !t.matches?.("input:not([type=radio]):not([type=checkbox]), select, textarea") || !t.closest(".sheet-body")) return;
+    setTimeout(() => t.scrollIntoView({ block: "center", behavior: "smooth" }), 320);
+  });
 
   // ══════════════════════════════════════════════════════════
   // Loading
@@ -1978,7 +1980,6 @@ dialog.modal::backdrop { background: rgba(43, 34, 48, .4); backdrop-filter: blur
     const pills = foodPills(p).concat((p.tags || []).slice(0, 4).map((t) => `<span class="pill tag">${esc(t)}</span>`));
     return `
       <article class="card">
-        ${avatar(p.name)}
         <div class="card-main">
           <div class="card-title">
             <h3><button class="stretch" type="button" data-open="${esc(p.id)}">${esc(p.name)}</button></h3>
@@ -2068,17 +2069,18 @@ dialog.modal::backdrop { background: rgba(43, 34, 48, .4); backdrop-filter: blur
     const online = safeUrl(p.booking_url) || site;
     const sub = [CATEGORY[p.category], address].filter(Boolean).join(" · ");
 
-    $("#detailHead").innerHTML = `
-      <div class="detail-head">${avatar(p.name)}
-        <div><h2 id="detailTitle">${esc(p.name)}</h2>${sub ? `<p class="card-sub">${esc(sub)}</p>` : ""}
-          <p style="margin-top:10px"><span class="status ${st.cls}">${esc(st.text)}</span></p></div>
-      </div>`;
-
     const actions = [];
     if (p.booking_method === "online" && online) actions.push(`<a class="btn btn-primary btn-sm" href="${esc(online)}" target="_blank" rel="noopener">${ic("calendar")}Book online</a>`);
     if (p.phone) actions.push(`<a class="btn ${p.booking_method === "online" ? "btn-outline" : "btn-primary"} btn-sm" href="${esc(telHref(p.phone))}">${ic("phone")}${p.booking_method === "phone" || p.booking_method === "unknown" ? "Call to book" : "Call"}</a>`);
     if (site) actions.push(`<a class="btn btn-outline btn-sm" href="${esc(site)}" target="_blank" rel="noopener">${ic("globe")}Website</a>`);
     if (address) actions.push(`<a class="btn btn-outline btn-sm" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.name + ", " + address)}" target="_blank" rel="noopener">${ic("nav")}Directions</a>`);
+
+    // Key info + actions live in the fixed header, so they stay on screen while the details scroll.
+    $("#detailHead").innerHTML = `
+      <h2 id="detailTitle">${esc(p.name)}</h2>
+      ${sub ? `<p class="card-sub">${esc(sub)}</p>` : ""}
+      <div class="detail-status"><span class="status ${st.cls}">${esc(st.text)}</span>${priceHTML(p.price_level)}</div>
+      ${actions.length ? `<div class="detail-actions">${actions.join("")}</div>` : ""}`;
 
     const tile = (label, value) => `<div class="tile"><small>${label}</small><strong>${value || '<span class="none">Not added</span>'}</strong></div>`;
     const bookingText = { online: "Online", phone: p.phone ? `By phone · ${esc(p.phone)}` : "By phone", walk_in: "Walk-in only" }[p.booking_method]
@@ -2096,7 +2098,6 @@ dialog.modal::backdrop { background: rgba(43, 34, 48, .4); backdrop-filter: blur
 
     const notes = [["Booking notes", p.booking_notes], ["Parking", p.parking_notes], ["Public transport", p.transport_notes], ["Notes", p.notes]].filter(([, v]) => v);
     $("#detailBody").innerHTML = `
-      ${actions.length ? `<div class="detail-actions">${actions.join("")}</div>` : ""}
       <section class="dsec" style="border-top:0">
         <h3>At a glance</h3>
         <div class="glance">
@@ -2794,7 +2795,8 @@ dialog.modal::backdrop { background: rgba(43, 34, 48, .4); backdrop-filter: blur
     editorSnapshot = JSON.stringify(collectForm().place);
     editDlg.showModal();
     $("#editBody").scrollTop = 0;
-    if (!p) F.name.focus();
+    // On touch screens don't pop the keyboard straight away: it hides half the form. Desktop gets focus.
+    if (!p && !isTouch()) F.name.focus();
   }
   const isDirty = () => JSON.stringify(collectForm().place) !== editorSnapshot;
   function requestCloseEditor() {
