@@ -55,6 +55,15 @@
   --shadow-lg: 0 30px 80px rgba(91, 58, 94, .22);
 
   --ease: cubic-bezier(.2, .8, .2, 1);
+
+  /* Sizing & spacing: see DESIGN_SYSTEM.md. Use these, never raw pixel heights/gaps. */
+  --control: 48px;        /* form fields: text inputs, selects, time pickers, the button beside a field */
+  --control-sm: 44px;     /* page-level controls: default buttons, toolbar search & sort */
+  --control-xs: 38px;     /* small buttons (.btn-sm), segment options, chips */
+  --control-xxs: 34px;    /* tiny buttons (.btn-xs), filter chips */
+  --gap-label: 8px;       /* label → its control (and control → help text) */
+  --gap-field: 20px;      /* one field (or row of fields) → the next, stacked */
+  --gap-inline: 16px;     /* fields side by side in a .row */
 }
 
 /* ════════════════════════════════════════════════════════════
@@ -98,7 +107,7 @@ button { cursor: pointer; }
    ════════════════════════════════════════════════════════════ */
 .btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-  min-height: 44px; padding: 0 20px; border-radius: var(--r-pill);
+  min-height: var(--control-sm); padding: 0 20px; border-radius: var(--r-pill);
   border: 1px solid transparent; background: transparent;
   font-weight: 600; font-size: 15px; white-space: nowrap; text-decoration: none;
   transition: background-color .15s var(--ease), border-color .15s var(--ease), color .15s var(--ease), box-shadow .15s var(--ease), transform .15s var(--ease);
@@ -115,11 +124,11 @@ button { cursor: pointer; }
 .btn-ghost:hover { background: var(--surface-2); }
 .btn-danger { color: var(--red); }
 .btn-danger:hover { background: var(--red-50); }
-.btn-sm { min-height: 38px; padding: 0 14px; font-size: 14px; }
-.btn-xs { min-height: 34px; padding: 0 12px; font-size: 13px; font-weight: 600; }
+.btn-sm { min-height: var(--control-xs); padding: 0 14px; font-size: 14px; }
+.btn-xs { min-height: var(--control-xxs); padding: 0 12px; font-size: 13px; font-weight: 600; }
 .btn-block { width: 100%; }
 .icon-btn {
-  display: inline-grid; place-items: center; width: 42px; height: 42px; border-radius: 50%; flex: none;
+  display: inline-grid; place-items: center; width: var(--control-sm); height: var(--control-sm); border-radius: 50%; flex: none;
   border: 0; background: transparent; color: var(--ink-2);
 }
 .icon-btn:hover { background: var(--surface-2); }
@@ -130,12 +139,13 @@ button { cursor: pointer; }
 /* ════════════════════════════════════════════════════════════
    Form controls
    ════════════════════════════════════════════════════════════ */
+/* One control height everywhere in forms: 48px for text inputs, selects and time pickers. */
 .input, .select, textarea.input {
-  width: 100%; min-height: 48px; padding: 11px 14px;
+  width: 100%; height: var(--control); min-height: var(--control); padding: 0 14px; line-height: 1.3;
   border: 1px solid var(--line-strong); border-radius: var(--r-sm); background: var(--surface);
   transition: border-color .15s, box-shadow .15s;
 }
-textarea.input { min-height: 110px; resize: vertical; line-height: 1.5; }
+textarea.input { height: auto; min-height: 110px; padding: 12px 14px; resize: vertical; line-height: 1.5; }
 .input::placeholder, textarea.input::placeholder { color: #a99ba3; }
 .input:hover, .select:hover { border-color: #d6c4bf; }
 .input:focus, .select:focus, textarea.input:focus {
@@ -148,20 +158,23 @@ textarea.input { min-height: 110px; resize: vertical; line-height: 1.5; }
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%237a6b75' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
   background-repeat: no-repeat; background-position: right 12px center; padding-right: 38px;
 }
-.field { display: grid; gap: 8px; }
-.field + .field, .field + .row, .row + .field, .row + .row { margin-top: 20px; }
+.field { display: grid; gap: var(--gap-label); align-content: start; }
+.field + .field, .field + .row, .row + .field, .row + .row { margin-top: var(--gap-field); }
+/* Fields side by side share one top line: no stacking gap, no stretching to the tallest neighbour. */
+.row { align-items: start; }
+.row > .field { margin-top: 0; }
 .label, .field > label { font-size: 14px; font-weight: 600; color: var(--ink-2); }
 .label-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
 .req { font-weight: 500; color: var(--muted); font-size: 12px; margin-left: 4px; }
 .help { font-size: 13px; color: var(--muted); }
-.row { display: grid; gap: 16px; grid-template-columns: repeat(var(--cols, 2), minmax(0, 1fr)); }
+.row { display: grid; gap: var(--gap-inline); grid-template-columns: repeat(var(--cols, 2), minmax(0, 1fr)); }
 
 /* Chips (checkbox / radio) */
 .chips { display: flex; flex-wrap: wrap; gap: 8px; }
 .chip { position: relative; }
 .chip input { position: absolute; inset: 0; opacity: 0; margin: 0; cursor: pointer; }
 .chip span {
-  display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 0 16px;
+  display: inline-flex; align-items: center; gap: 6px; min-height: var(--control-xs); padding: 0 16px;
   border-radius: var(--r-pill); border: 1px solid var(--line-strong); background: var(--surface);
   font-size: 14px; font-weight: 500; color: var(--ink-2); user-select: none;
   transition: all .15s var(--ease);
@@ -186,7 +199,7 @@ textarea.input { min-height: 110px; resize: vertical; line-height: 1.5; }
 .seg label { position: relative; }
 .seg input { position: absolute; inset: 0; opacity: 0; margin: 0; cursor: pointer; }
 .seg span {
-  display: inline-flex; align-items: center; min-height: 38px; padding: 0 16px; border-radius: var(--r-pill);
+  display: inline-flex; align-items: center; min-height: var(--control-xs); padding: 0 16px; border-radius: var(--r-pill);
   font-size: 14px; font-weight: 500; color: var(--muted); user-select: none; transition: all .15s var(--ease);
 }
 .seg label:hover span { color: var(--ink); }
@@ -247,14 +260,14 @@ textarea.input { min-height: 110px; resize: vertical; line-height: 1.5; }
 .logo-text em { font-style: italic; color: var(--rose); }
 .top-right { display: flex; align-items: center; gap: 10px; }
 .ws-select {
-  min-height: 40px; padding: 0 36px 0 16px; border-radius: var(--r-pill); border: 1px solid var(--line-strong);
+  min-height: var(--control-sm); padding: 0 36px 0 16px; border-radius: var(--r-pill); border: 1px solid var(--line-strong);
   background-color: var(--surface); font-size: 14px; font-weight: 500;
 }
 .menu { position: relative; }
 .menu > summary { list-style: none; }
 .menu > summary::-webkit-details-marker { display: none; }
 .avatar-btn {
-  display: grid; place-items: center; width: 42px; height: 42px; border-radius: 50%; cursor: pointer;
+  display: grid; place-items: center; width: var(--control-sm); height: var(--control-sm); border-radius: 50%; cursor: pointer;
   background: var(--rose-50); color: var(--rose-600); font-weight: 700; border: 1px solid var(--rose-100);
 }
 .menu-pop {
@@ -351,7 +364,7 @@ textarea.input { min-height: 110px; resize: vertical; line-height: 1.5; }
 
 .quick { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 20px; }
 .qchip {
-  display: inline-flex; align-items: center; gap: 7px; min-height: 42px; padding: 0 15px;
+  display: inline-flex; align-items: center; gap: 7px; min-height: var(--control-sm); padding: 0 15px;
   border-radius: var(--r-pill); border: 1px solid var(--line-strong); background: rgba(255, 255, 255, .8);
   font-size: 14px; font-weight: 500; color: var(--ink-2); transition: all .15s var(--ease);
 }
@@ -375,12 +388,13 @@ textarea.input { min-height: 110px; resize: vertical; line-height: 1.5; }
 .toolbar-right { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 .search-mini { position: relative; display: flex; align-items: center; }
 .search-mini .ic { position: absolute; left: 14px; color: var(--muted); pointer-events: none; }
-.search-mini input { padding-left: 42px; min-height: 44px; border-radius: var(--r-pill); width: 260px; }
-.sort-select { min-height: 44px; border-radius: var(--r-pill); width: auto; padding-left: 18px; font-size: 14px; font-weight: 500; }
+/* Toolbar controls share the 44px button height. */
+.search-mini input { padding-left: 42px; height: var(--control-sm); min-height: var(--control-sm); border-radius: var(--r-pill); width: 260px; }
+.sort-select { height: var(--control-sm); min-height: var(--control-sm); border-radius: var(--r-pill); width: auto; padding-left: 18px; font-size: 14px; font-weight: 500; }
 
 .active-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 20px; }
 .active-chip {
-  display: inline-flex; align-items: center; gap: 6px; min-height: 34px; padding: 0 8px 0 14px; border-radius: var(--r-pill);
+  display: inline-flex; align-items: center; gap: 6px; min-height: var(--control-xxs); padding: 0 8px 0 14px; border-radius: var(--r-pill);
   background: var(--rose-50); color: var(--rose-600); border: 1px solid var(--rose-100); font-size: 13px; font-weight: 600;
 }
 .active-chip:hover { background: var(--rose-100); }
@@ -511,17 +525,18 @@ dialog.sheet::backdrop { background: rgba(43, 34, 48, .32); backdrop-filter: blu
 .preset small { font-size: 12px; color: var(--muted); }
 .preset:hover { border-color: var(--rose); background: var(--rose-50); }
 .days { margin-top: 18px; border-top: 1px solid var(--line); }
-.day-row { display: grid; grid-template-columns: 120px minmax(0, 1fr); gap: 8px 16px; padding: 12px 0; border-bottom: 1px solid var(--line); }
-.day-head { display: flex; align-items: center; gap: 12px; min-height: 44px; }
+.day-row { display: grid; grid-template-columns: 120px minmax(0, 1fr); align-items: start; gap: 8px 16px; padding: 12px 0; border-bottom: 1px solid var(--line); }
+/* Same height as the first row of time pickers, so the switch and day name sit on the pickers' centre line. */
+.day-head { display: flex; align-items: center; gap: 12px; height: var(--control); }
 .day-name { font-weight: 600; width: 40px; }
 .day-body { display: grid; gap: 8px; min-width: 0; }
 .span-row { display: flex; align-items: center; gap: 8px; }
-.span-row .select { min-height: 44px; flex: 1; min-width: 0; padding-left: 12px; font-size: 15px; }
+.span-row .select { flex: 1; min-width: 0; padding-left: 12px; font-size: 15px; }
 .span-row .to { color: var(--muted); font-size: 14px; }
 .span-row .icon-btn.sm { visibility: hidden; }
 .day-body.multi .span-row .icon-btn.sm { visibility: visible; }
 .add-span { justify-self: start; font-size: 13px; text-decoration: none; padding: 4px 0; }
-.closed-text { display: flex; align-items: center; min-height: 44px; color: var(--muted); font-size: 15px; }
+.closed-text { display: flex; align-items: center; min-height: var(--control); color: var(--muted); font-size: 15px; }
 .day-row.closed .span-row, .day-row.closed .add-span { display: none; }
 .day-row:not(.closed) .closed-text { display: none; }
 .copy-tools { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
@@ -533,11 +548,12 @@ dialog.sheet::backdrop { background: rgba(43, 34, 48, .32); backdrop-filter: blu
 .star-btn:hover { color: var(--rose-600); }
 
 .tag-box {
-  display: flex; flex-wrap: wrap; align-items: center; gap: 6px; min-height: 48px; padding: 6px 8px;
+  display: flex; flex-wrap: wrap; align-items: center; gap: 6px; min-height: var(--control); padding: 6px 8px;
   border: 1px solid var(--line-strong); border-radius: var(--r-sm); background: var(--surface); cursor: text;
 }
 .tag-box:focus-within { border-color: var(--rose); box-shadow: 0 0 0 4px rgba(168, 70, 107, .12); }
-.tag-box input { flex: 1; min-width: 140px; border: 0; outline: none; padding: 6px; background: none; }
+/* 6px box padding + 34px inner input + borders = --control (48px). */
+.tag-box input { flex: 1; min-width: 140px; height: 34px; border: 0; outline: none; padding: 0 6px; background: none; }
 .tag-chip {
   display: inline-flex; align-items: center; gap: 4px; padding: 4px 6px 4px 12px; border-radius: var(--r-pill);
   background: var(--lilac-50); color: var(--lilac); font-size: 13px; font-weight: 600;
@@ -570,7 +586,7 @@ dialog.sheet::backdrop { background: rgba(43, 34, 48, .32); backdrop-filter: blu
    ════════════════════════════════════════════════════════════ */
 .name-row { display: flex; gap: 8px; }
 .name-row .input { flex: 1; min-width: 0; }
-.name-row .btn { min-height: 48px; flex: none; }
+.name-row .btn { min-height: var(--control); flex: none; }
 .g-results { margin-top: 10px; border: 1px solid var(--line-strong); border-radius: var(--r); background: var(--surface); box-shadow: var(--shadow); overflow: hidden; }
 .g-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 6px 8px 6px 16px; background: var(--surface-2); font-size: 13px; color: var(--muted); }
 .g-head .icon-btn.sm:hover { color: var(--ink); background: var(--line); }
@@ -805,7 +821,6 @@ dialog.modal::backdrop { background: rgba(43, 34, 48, .4); backdrop-filter: blur
       <button type="button" class="qchip" data-quick="now" aria-pressed="false"><i data-ic="clock"></i>Open now</button>
       <span class="qsep" aria-hidden="true"></span>
       <button type="button" class="qchip" data-quick="meal:breakfast" aria-pressed="false">Breakfast</button>
-      <button type="button" class="qchip" data-quick="meal:brunch" aria-pressed="false">Brunch</button>
       <button type="button" class="qchip" data-quick="meal:lunch" aria-pressed="false">Lunch</button>
       <button type="button" class="qchip" data-quick="meal:dinner" aria-pressed="false">Dinner</button>
       <span class="qsep" aria-hidden="true"></span>
