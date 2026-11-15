@@ -155,6 +155,7 @@ create policy "members read workspaces" on public.workspaces
   for select to authenticated using (public.is_member(id));
 
 drop policy if exists "members rename workspaces" on public.workspaces;
+drop policy if exists "owners rename workspaces" on public.workspaces;
 create policy "members rename workspaces" on public.workspaces
   for update to authenticated using (public.is_member(id)) with check (public.is_member(id));
 
@@ -329,6 +330,7 @@ create policy "members delete places" on public.places
   for delete to authenticated using (public.can_edit_places(workspace_id));
 
 drop policy if exists "members rename workspaces" on public.workspaces;
+drop policy if exists "owners rename workspaces" on public.workspaces;
 create policy "owners rename workspaces" on public.workspaces
   for update to authenticated using (public.is_owner(id)) with check (public.is_owner(id));
 
