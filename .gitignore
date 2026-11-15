@@ -1,0 +1,19 @@
+# Secrets — never commit these. Real secrets live in Supabase (Edge Function secrets).
+.env
+.env.*
+*.pem
+*.key
+supabase/.env
+supabase/.temp/
+supabase/.branches/
+
+# Tooling
+node_modules/
+.claude/
+.vscode/
+.idea/
+
+# OS clutter
+.DS_Store
+Thumbs.db
+desktop.ini

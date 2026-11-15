@@ -1,0 +1,2486 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Where the Food At</title>
+<meta name="theme-color" content="#fbf7f5">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<style>
+/* ════════════════════════════════════════════════════════════
+   Design tokens
+   ════════════════════════════════════════════════════════════ */
+:root {
+  color-scheme: light;
+
+  --bg: #fbf7f5;
+  --surface: #ffffff;
+  --surface-2: #f8f2f0;
+  --line: #f0e6e3;
+  --line-strong: #e4d6d2;
+
+  --ink: #2b2230;
+  --ink-2: #4a3f4d;
+  --muted: #7a6b75;
+
+  --rose: #a8466b;
+  --rose-600: #8f3a5b;
+  --rose-50: #fcf1f5;
+  --rose-100: #f7dfe8;
+  --plum: #5b3a5e;
+
+  --sage: #3f6f51;
+  --sage-50: #ecf5ef;
+  --amber: #8a5a10;
+  --amber-50: #fdf3e2;
+  --red: #a83f45;
+  --red-50: #fcedee;
+  --lilac: #6c5a9c;
+  --lilac-50: #f2eff9;
+
+  --font-display: "Fraunces", Georgia, "Times New Roman", serif;
+  --font-body: "Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+
+  --r-sm: 10px;
+  --r: 16px;
+  --r-lg: 24px;
+  --r-pill: 999px;
+
+  --shadow-sm: 0 1px 2px rgba(91, 58, 94, .06);
+  --shadow: 0 1px 3px rgba(91, 58, 94, .05), 0 10px 30px rgba(91, 58, 94, .07);
+  --shadow-lg: 0 30px 80px rgba(91, 58, 94, .22);
+
+  --ease: cubic-bezier(.2, .8, .2, 1);
+}
+
+/* ════════════════════════════════════════════════════════════
+   Base
+   ════════════════════════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  min-height: 100vh;
+  background:
+    radial-gradient(900px 420px at 8% -120px, #fbe2ec 0%, rgba(251, 226, 236, 0) 70%),
+    radial-gradient(800px 380px at 95% -80px, #eee6fb 0%, rgba(238, 230, 251, 0) 70%),
+    var(--bg);
+  background-repeat: no-repeat;
+  color: var(--ink);
+  font: 400 16px/1.55 var(--font-body);
+  -webkit-font-smoothing: antialiased;
+}
+body:has(dialog[open]) { overflow: hidden; }
+h1, h2, h3, h4 { margin: 0; color: var(--ink); }
+p { margin: 0; }
+a { color: var(--rose); text-underline-offset: 3px; }
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+[hidden] { display: none !important; }
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden;
+  clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+}
+:focus-visible { outline: 3px solid rgba(168, 70, 107, .35); outline-offset: 2px; }
+
+.ic {
+  width: 18px; height: 18px; flex: none;
+  fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round;
+}
+.ic-lg { width: 26px; height: 26px; }
+.ic-fill { fill: currentColor; stroke: none; }
+
+/* ════════════════════════════════════════════════════════════
+   Buttons
+   ════════════════════════════════════════════════════════════ */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  min-height: 44px; padding: 0 20px; border-radius: var(--r-pill);
+  border: 1px solid transparent; background: transparent;
+  font-weight: 600; font-size: 15px; white-space: nowrap; text-decoration: none;
+  transition: background-color .15s var(--ease), border-color .15s var(--ease), color .15s var(--ease), box-shadow .15s var(--ease), transform .15s var(--ease);
+}
+.btn:active { transform: translateY(1px); }
+.btn:disabled { opacity: .6; cursor: progress; }
+.btn-primary { background: var(--rose); color: #fff; box-shadow: 0 6px 16px rgba(168, 70, 107, .25); }
+.btn-primary:hover { background: var(--rose-600); }
+.btn-soft { background: var(--rose-50); color: var(--rose-600); border-color: var(--rose-100); }
+.btn-soft:hover { background: var(--rose-100); }
+.btn-outline { background: var(--surface); border-color: var(--line-strong); color: var(--ink-2); }
+.btn-outline:hover { border-color: var(--rose); color: var(--rose); }
+.btn-ghost { color: var(--ink-2); }
+.btn-ghost:hover { background: var(--surface-2); }
+.btn-danger { color: var(--red); }
+.btn-danger:hover { background: var(--red-50); }
+.btn-sm { min-height: 38px; padding: 0 14px; font-size: 14px; }
+.btn-xs { min-height: 34px; padding: 0 12px; font-size: 13px; font-weight: 600; }
+.btn-block { width: 100%; }
+.icon-btn {
+  display: inline-grid; place-items: center; width: 42px; height: 42px; border-radius: 50%; flex: none;
+  border: 0; background: transparent; color: var(--ink-2);
+}
+.icon-btn:hover { background: var(--surface-2); }
+.icon-btn.sm { width: 36px; height: 36px; color: var(--muted); }
+.icon-btn.sm:hover { color: var(--red); background: var(--red-50); }
+.link-btn { border: 0; background: none; padding: 0; color: var(--rose); font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
+
+/* ════════════════════════════════════════════════════════════
+   Form controls
+   ════════════════════════════════════════════════════════════ */
+.input, .select, textarea.input {
+  width: 100%; min-height: 48px; padding: 11px 14px;
+  border: 1px solid var(--line-strong); border-radius: var(--r-sm); background: var(--surface);
+  transition: border-color .15s, box-shadow .15s;
+}
+textarea.input { min-height: 110px; resize: vertical; line-height: 1.5; }
+.input::placeholder, textarea.input::placeholder { color: #a99ba3; }
+.input:hover, .select:hover { border-color: #d6c4bf; }
+.input:focus, .select:focus, textarea.input:focus {
+  outline: none; border-color: var(--rose); box-shadow: 0 0 0 4px rgba(168, 70, 107, .12);
+}
+.input[aria-invalid="true"], .select[aria-invalid="true"] { border-color: var(--red); background-color: var(--red-50); }
+.input:disabled { background: var(--surface-2); color: var(--muted); }
+.select, .bare-select {
+  appearance: none; -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%237a6b75' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 12px center; padding-right: 38px;
+}
+.field { display: grid; gap: 8px; }
+.field + .field, .field + .row, .row + .field, .row + .row { margin-top: 20px; }
+.label, .field > label { font-size: 14px; font-weight: 600; color: var(--ink-2); }
+.label-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.req { font-weight: 500; color: var(--muted); font-size: 12px; margin-left: 4px; }
+.help { font-size: 13px; color: var(--muted); }
+.row { display: grid; gap: 16px; grid-template-columns: repeat(var(--cols, 2), minmax(0, 1fr)); }
+
+/* Chips (checkbox / radio) */
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { position: relative; }
+.chip input { position: absolute; inset: 0; opacity: 0; margin: 0; cursor: pointer; }
+.chip span {
+  display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 0 16px;
+  border-radius: var(--r-pill); border: 1px solid var(--line-strong); background: var(--surface);
+  font-size: 14px; font-weight: 500; color: var(--ink-2); user-select: none;
+  transition: all .15s var(--ease);
+}
+.chip:hover span { border-color: #d6c4bf; }
+.chip input:checked + span { background: var(--rose-50); border-color: var(--rose); color: var(--rose-600); font-weight: 600; }
+.chip input:focus-visible + span { outline: 3px solid rgba(168, 70, 107, .35); outline-offset: 2px; }
+.chip input:disabled + span { opacity: .45; cursor: not-allowed; }
+.chips.auto .chip input:checked + span { background: var(--amber-50); border-color: #e9c98f; color: var(--amber); }
+.auto-badge {
+  display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: var(--r-pill);
+  background: var(--amber-50); color: var(--amber); font-size: 12px; font-weight: 700;
+}
+.auto-badge.manual { background: var(--rose-50); color: var(--rose-600); }
+.auto-badge .ic { width: 13px; height: 13px; }
+
+/* Segmented control (radio group) */
+.seg {
+  display: inline-flex; flex-wrap: wrap; gap: 4px; padding: 4px;
+  background: var(--surface-2); border-radius: var(--r-lg); border: 1px solid var(--line);
+}
+.seg label { position: relative; }
+.seg input { position: absolute; inset: 0; opacity: 0; margin: 0; cursor: pointer; }
+.seg span {
+  display: inline-flex; align-items: center; min-height: 38px; padding: 0 16px; border-radius: var(--r-pill);
+  font-size: 14px; font-weight: 500; color: var(--muted); user-select: none; transition: all .15s var(--ease);
+}
+.seg label:hover span { color: var(--ink); }
+.seg input:checked + span { background: var(--surface); color: var(--rose-600); font-weight: 600; box-shadow: var(--shadow-sm), 0 0 0 1px var(--line-strong); }
+.seg input:focus-visible + span { outline: 3px solid rgba(168, 70, 107, .35); outline-offset: 1px; }
+
+/* Switch */
+.switch {
+  appearance: none; -webkit-appearance: none; flex: none; margin: 0;
+  width: 46px; height: 28px; border-radius: var(--r-pill); background: var(--line-strong);
+  position: relative; cursor: pointer; transition: background .2s var(--ease);
+}
+.switch::before {
+  content: ""; position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 50%;
+  background: #fff; box-shadow: 0 1px 3px rgba(0, 0, 0, .18); transition: transform .2s var(--ease);
+}
+.switch:checked { background: var(--rose); }
+.switch:checked::before { transform: translateX(18px); }
+.switch-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  padding: 14px 0; cursor: pointer;
+}
+.switch-row + .switch-row { border-top: 1px solid var(--line); }
+.switch-row strong { display: block; font-weight: 600; font-size: 15px; }
+
+/* Stepper */
+.stepper { display: inline-flex; align-items: center; gap: 4px; }
+.stepper input { width: 64px; text-align: center; -moz-appearance: textfield; }
+.stepper input::-webkit-inner-spin-button, .stepper input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+.step-btn {
+  width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--line-strong);
+  background: var(--surface); font-size: 20px; line-height: 1; color: var(--ink-2); display: grid; place-items: center;
+}
+.step-btn:hover { border-color: var(--rose); color: var(--rose); }
+
+/* Alerts */
+.alert { padding: 12px 16px; border-radius: var(--r-sm); font-size: 14px; background: var(--red-50); color: var(--red); }
+.alert.ok { background: var(--sage-50); color: var(--sage); }
+.alert ul { margin: 6px 0 0; padding-left: 18px; }
+
+/* ════════════════════════════════════════════════════════════
+   Top bar
+   ════════════════════════════════════════════════════════════ */
+.demo-banner {
+  display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap;
+  padding: 10px 20px; font-size: 14px; color: var(--lilac); background: var(--lilac-50); text-align: center;
+}
+.topbar {
+  display: flex; align-items: center; gap: 16px; max-width: 1080px; margin: 0 auto; padding: 20px 32px;
+}
+.logo { display: inline-flex; align-items: center; gap: 12px; text-decoration: none; color: var(--ink); margin-right: auto; }
+.logo-mark {
+  display: grid; place-items: center; width: 40px; height: 40px; border-radius: 14px; color: #fff;
+  background: linear-gradient(135deg, #c85a85 0%, #8e5aa8 100%); box-shadow: 0 6px 16px rgba(168, 70, 107, .25);
+}
+.logo-mark.lg { width: 56px; height: 56px; border-radius: 18px; }
+.logo-text { font-family: var(--font-display); font-size: 21px; font-weight: 600; letter-spacing: -.01em; }
+.logo-text em { font-style: italic; color: var(--rose); }
+.top-right { display: flex; align-items: center; gap: 10px; }
+.ws-select {
+  min-height: 40px; padding: 0 36px 0 16px; border-radius: var(--r-pill); border: 1px solid var(--line-strong);
+  background-color: var(--surface); font-size: 14px; font-weight: 500;
+}
+.menu { position: relative; }
+.menu > summary { list-style: none; }
+.menu > summary::-webkit-details-marker { display: none; }
+.avatar-btn {
+  display: grid; place-items: center; width: 42px; height: 42px; border-radius: 50%; cursor: pointer;
+  background: var(--rose-50); color: var(--rose-600); font-weight: 700; border: 1px solid var(--rose-100);
+}
+.menu-pop {
+  position: absolute; right: 0; top: calc(100% + 10px); z-index: 30; min-width: 240px; padding: 8px;
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); box-shadow: var(--shadow-lg);
+}
+.menu-head { padding: 10px 12px 12px; border-bottom: 1px solid var(--line); margin-bottom: 6px; }
+.menu-head small { display: block; color: var(--muted); font-size: 12px; }
+.menu-head strong { font-size: 14px; word-break: break-all; }
+.menu-item {
+  display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px 12px; border: 0; border-radius: var(--r-sm);
+  background: none; text-align: left; font-size: 14px; color: var(--ink-2);
+}
+.menu-item:hover { background: var(--surface-2); }
+
+/* ════════════════════════════════════════════════════════════
+   Auth
+   ════════════════════════════════════════════════════════════ */
+.auth {
+  display: grid; grid-template-columns: 1.1fr 1fr; gap: 0; max-width: 1040px; margin: 24px auto 64px; padding: 0 32px;
+}
+.auth-art {
+  border-radius: var(--r-lg) 0 0 var(--r-lg); padding: 56px;
+  background: linear-gradient(150deg, #f9dce7 0%, #efe3f7 55%, #fdf0e6 100%);
+  display: flex; flex-direction: column; justify-content: flex-end; gap: 20px; min-height: 520px;
+}
+.auth-art h1 { font-family: var(--font-display); font-weight: 500; font-size: 40px; line-height: 1.12; letter-spacing: -.02em; color: var(--plum); }
+.auth-art h1 em { color: var(--rose); }
+.auth-art p { color: var(--ink-2); max-width: 36ch; font-size: 17px; }
+.auth-form {
+  background: var(--surface); border-radius: 0 var(--r-lg) var(--r-lg) 0; padding: 56px 48px; box-shadow: var(--shadow);
+  display: flex; flex-direction: column; justify-content: center; gap: 0;
+}
+.auth-form h2 { font-family: var(--font-display); font-weight: 600; font-size: 30px; letter-spacing: -.01em; }
+.auth-form .lead { color: var(--muted); margin: 6px 0 28px; }
+.auth-form .alert { margin-bottom: 20px; }
+.auth-form .btn-block { margin-top: 28px; min-height: 52px; font-size: 16px; }
+.btn-google {
+  min-height: 52px; background: var(--surface); border: 1px solid var(--line-strong); color: var(--ink); font-size: 16px; gap: 12px;
+}
+.btn-google:hover { background: var(--surface-2); border-color: #d6c4bf; }
+.g-logo { width: 20px; height: 20px; }
+.or-divider { display: flex; align-items: center; gap: 14px; margin: 24px 0; color: var(--muted); font-size: 13px; }
+.or-divider::before, .or-divider::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+.auth-switch { margin-top: 20px; text-align: center; color: var(--muted); font-size: 15px; }
+.pw { position: relative; }
+.pw .input { padding-right: 72px; }
+.pw-toggle {
+  position: absolute; right: 6px; top: 50%; transform: translateY(-50%); border: 0; background: none;
+  padding: 8px 10px; border-radius: 8px; font-size: 13px; font-weight: 600; color: var(--rose);
+}
+.pw-toggle:hover { background: var(--rose-50); }
+
+/* ════════════════════════════════════════════════════════════
+   Page & hero planner
+   ════════════════════════════════════════════════════════════ */
+.page { max-width: 1080px; margin: 0 auto; padding: 8px 32px 96px; }
+.hero { padding: 28px 0 8px; }
+.hero-title {
+  font-family: var(--font-display); font-weight: 500; font-size: clamp(34px, 5vw, 52px);
+  line-height: 1.05; letter-spacing: -.025em; color: var(--plum);
+}
+.hero-title em { color: var(--rose); }
+.hero-sub { margin-top: 12px; color: var(--muted); font-size: 17px; max-width: 52ch; }
+
+.planner {
+  margin-top: 32px; display: grid; grid-template-columns: 1.5fr 1.2fr .9fr; align-items: stretch;
+  background: var(--surface); border-radius: var(--r-lg); box-shadow: var(--shadow); border: 1px solid var(--line);
+}
+.pl-field { position: relative; padding: 16px 24px 14px; min-width: 0; }
+.pl-field + .pl-field { border-left: 1px solid var(--line); }
+.pl-field > label, .pl-field > .pl-label {
+  display: block; font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted);
+}
+.pl-input { display: flex; align-items: center; gap: 10px; margin-top: 6px; color: var(--rose); }
+.pl-input input, .pl-input select {
+  border: 0; background-color: transparent; padding: 4px 0; min-height: 36px; width: 100%; min-width: 0;
+  font-size: 17px; font-weight: 500; color: var(--ink);
+}
+.pl-input input::placeholder { color: #a99ba3; font-weight: 400; }
+.pl-input input:focus, .pl-input select:focus { outline: none; }
+.pl-field:focus-within { background: var(--rose-50); border-radius: var(--r-lg); }
+.pl-field:focus-within + .pl-field, .pl-field:has(+ .pl-field:focus-within) { border-color: transparent; }
+.pl-when select { width: auto; flex: 1; padding-right: 28px; background-position: right 4px center; }
+.pl-when input[type=time] { width: auto; flex: 1; }
+.pl-guests .pl-input input { text-align: center; width: 48px; flex: none; -moz-appearance: textfield; }
+.pl-guests .pl-input input::-webkit-inner-spin-button { -webkit-appearance: none; }
+.pl-guests .step-btn { width: 34px; height: 34px; font-size: 18px; }
+.clear-x {
+  display: grid; place-items: center; width: 28px; height: 28px; flex: none; border-radius: 50%; border: 0;
+  background: var(--surface-2); color: var(--muted);
+}
+.clear-x:hover { background: var(--rose-100); color: var(--rose-600); }
+
+.quick { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 20px; }
+.qchip {
+  display: inline-flex; align-items: center; gap: 7px; min-height: 42px; padding: 0 15px;
+  border-radius: var(--r-pill); border: 1px solid var(--line-strong); background: rgba(255, 255, 255, .8);
+  font-size: 14px; font-weight: 500; color: var(--ink-2); transition: all .15s var(--ease);
+}
+.qchip:hover { border-color: var(--rose); color: var(--rose-600); }
+.qchip[aria-pressed="true"] { background: var(--rose); border-color: var(--rose); color: #fff; }
+.qchip .ic { width: 16px; height: 16px; }
+.qsep { width: 1px; height: 24px; background: var(--line-strong); margin: 0 2px; }
+.qchip-more { margin-left: auto; background: var(--surface); }
+.count-dot {
+  display: inline-grid; place-items: center; min-width: 22px; height: 22px; padding: 0 6px; border-radius: var(--r-pill);
+  background: var(--rose); color: #fff; font-size: 12px; font-weight: 700;
+}
+
+/* ════════════════════════════════════════════════════════════
+   Results
+   ════════════════════════════════════════════════════════════ */
+.results { margin-top: 48px; }
+.toolbar { display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; flex-wrap: wrap; }
+.results-title { font-family: var(--font-display); font-weight: 600; font-size: 28px; letter-spacing: -.01em; }
+.results-meta { color: var(--muted); margin-top: 4px; font-size: 15px; }
+.toolbar-right { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.search-mini { position: relative; display: flex; align-items: center; }
+.search-mini .ic { position: absolute; left: 14px; color: var(--muted); pointer-events: none; }
+.search-mini input { padding-left: 42px; min-height: 44px; border-radius: var(--r-pill); width: 260px; }
+.sort-select { min-height: 44px; border-radius: var(--r-pill); width: auto; padding-left: 18px; font-size: 14px; font-weight: 500; }
+
+.active-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 20px; }
+.active-chip {
+  display: inline-flex; align-items: center; gap: 6px; min-height: 34px; padding: 0 8px 0 14px; border-radius: var(--r-pill);
+  background: var(--rose-50); color: var(--rose-600); border: 1px solid var(--rose-100); font-size: 13px; font-weight: 600;
+}
+.active-chip:hover { background: var(--rose-100); }
+.active-chip .ic { width: 14px; height: 14px; }
+.clear-all { font-size: 13px; }
+
+.list { display: flex; flex-direction: column; gap: 16px; margin-top: 28px; }
+
+/* ── Card (horizontal row in a vertical list) ── */
+.card {
+  position: relative; display: grid; grid-template-columns: 56px minmax(0, 1fr) auto; gap: 20px; align-items: start;
+  padding: 24px 28px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg);
+  box-shadow: var(--shadow-sm);
+  transition: transform .2s var(--ease), box-shadow .2s var(--ease), border-color .2s var(--ease);
+}
+.card:hover { transform: translateY(-2px); box-shadow: var(--shadow); border-color: var(--rose-100); }
+.avatar {
+  display: grid; place-items: center; width: 56px; height: 56px; border-radius: 18px; flex: none;
+  font-family: var(--font-display); font-weight: 600; font-size: 20px;
+}
+.card-main { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.card-title h3 { font-family: var(--font-display); font-weight: 600; font-size: 22px; line-height: 1.2; letter-spacing: -.01em; }
+.stretch { all: unset; cursor: pointer; }
+.stretch::after { content: ""; position: absolute; inset: 0; border-radius: var(--r-lg); }
+.stretch:focus-visible::after { outline: 3px solid rgba(168, 70, 107, .35); outline-offset: 2px; }
+.card-sub { margin-top: 4px; color: var(--muted); font-size: 14px; }
+.card-side {
+  display: flex; flex-direction: column; align-items: flex-end; justify-content: space-between; gap: 16px;
+  align-self: stretch; min-width: 170px;
+}
+.card-cta { display: flex; flex-direction: column; align-items: flex-end; gap: 10px; position: relative; z-index: 1; }
+.fav { display: inline-flex; align-items: center; gap: 5px; color: var(--rose); font-weight: 700; font-size: 15px; }
+.fav .ic { width: 17px; height: 17px; }
+.card-more {
+  border: 0; background: none; padding: 4px 2px; font-size: 13px; font-weight: 600; color: var(--muted);
+  border-radius: 6px; transition: color .15s, transform .15s var(--ease);
+}
+.card-more:hover, .card:hover .card-more { color: var(--rose); }
+.card:hover .card-more { transform: translateX(2px); }
+
+.status-line { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 14px; }
+.status { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; }
+.status::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: currentColor; flex: none; }
+.status.open { color: var(--sage); }
+.status.warn { color: var(--amber); }
+.status.closed { color: var(--red); }
+.status.unknown { color: var(--muted); font-weight: 500; }
+.price { font-weight: 600; letter-spacing: .06em; color: var(--ink-2); font-size: 14px; }
+.price .dim { color: #d8cbc7; }
+
+.facts { display: flex; flex-wrap: wrap; gap: 8px 22px; margin: 0; padding: 0; list-style: none; color: var(--ink-2); font-size: 14px; }
+.facts li { display: inline-flex; align-items: center; gap: 7px; }
+.facts .ic { width: 16px; height: 16px; color: var(--muted); }
+.facts .good, .facts .good .ic { color: var(--sage); }
+.facts .bad, .facts .bad .ic { color: var(--red); }
+
+.pills { display: flex; flex-wrap: wrap; gap: 6px; }
+.pill {
+  display: inline-flex; align-items: center; gap: 6px; min-height: 28px; padding: 0 12px; border-radius: var(--r-pill);
+  font-size: 13px; font-weight: 500; background: var(--surface-2); color: var(--ink-2); white-space: nowrap;
+}
+.pill.meal { background: var(--amber-50); color: var(--amber); }
+.pill.tag { background: var(--lilac-50); color: var(--lilac); }
+.pill.ok { background: var(--sage-50); color: var(--sage); }
+.pill.warn { background: var(--amber-50); color: var(--amber); }
+.pill .ic { width: 14px; height: 14px; }
+.muted-note { font-size: 13px; color: var(--muted); }
+
+/* ── Empty & skeleton ── */
+.empty {
+  display: flex; flex-direction: column; align-items: center; text-align: center; gap: 12px;
+  padding: 64px 24px; background: var(--surface); border: 1px dashed var(--line-strong); border-radius: var(--r-lg);
+}
+.empty-art { display: grid; place-items: center; width: 72px; height: 72px; border-radius: 50%; background: var(--rose-50); color: var(--rose); margin-bottom: 4px; }
+.empty h3 { font-family: var(--font-display); font-weight: 600; font-size: 24px; }
+.empty p { color: var(--muted); max-width: 44ch; }
+.empty .actions { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin-top: 8px; }
+.skeleton { height: 170px; border-radius: var(--r-lg); background: linear-gradient(90deg, #f6eeeb 0%, #fbf6f4 50%, #f6eeeb 100%); background-size: 200% 100%; animation: shimmer 1.4s infinite linear; }
+@keyframes shimmer { to { background-position: -200% 0; } }
+
+/* ════════════════════════════════════════════════════════════
+   Sheets (dialogs)
+   ════════════════════════════════════════════════════════════ */
+dialog.sheet {
+  position: fixed; inset: 0 0 0 auto; margin: 0; padding: 0; border: 0;
+  width: min(480px, 100vw); height: 100vh; max-height: 100vh; max-width: 100vw;
+  background: var(--surface); color: var(--ink); box-shadow: var(--shadow-lg);
+  border-radius: var(--r-lg) 0 0 var(--r-lg);
+}
+dialog.sheet[open] { display: flex; flex-direction: column; animation: sheetIn .28s var(--ease); }
+dialog.sheet.wide { width: min(660px, 100vw); }
+dialog.sheet::backdrop { background: rgba(43, 34, 48, .32); backdrop-filter: blur(3px); animation: fadeIn .2s ease; }
+@keyframes sheetIn { from { transform: translateX(40px); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes fadeIn { from { opacity: 0; } }
+.sheet > form { display: flex; flex-direction: column; height: 100%; min-height: 0; }
+.sheet-head { display: flex; align-items: flex-start; gap: 16px; padding: 28px 32px 20px; border-bottom: 1px solid var(--line); }
+.sheet-head > div { flex: 1; min-width: 0; }
+.sheet-head h2 { font-family: var(--font-display); font-weight: 600; font-size: 26px; letter-spacing: -.01em; line-height: 1.2; }
+.eyebrow { font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--rose); margin-bottom: 6px; }
+.sheet-body { flex: 1; overflow-y: auto; padding: 8px 32px 32px; overscroll-behavior: contain; }
+.sheet-foot {
+  display: flex; align-items: center; gap: 12px; padding: 18px 32px calc(18px + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--line); background: var(--surface);
+}
+.sheet-foot .grow { flex: 1; }
+
+.fsec { padding: 24px 0; }
+.fsec + .fsec { border-top: 1px solid var(--line); }
+.fsec h3 { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+.fsec .help { margin-bottom: 14px; }
+.fsec > .seg, .fsec > .chips { margin-top: 12px; }
+
+/* Editor sections */
+.esec { padding: 28px 0; }
+.esec + .esec { border-top: 1px solid var(--line); }
+.esec-title { font-family: var(--font-display); font-weight: 600; font-size: 20px; }
+.esec-help { color: var(--muted); font-size: 14px; margin-top: 4px; }
+.esec-body { margin-top: 20px; }
+.subhead { font-size: 15px; font-weight: 700; color: var(--ink); margin-top: 28px; }
+
+/* Hours editor */
+.presets { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.preset {
+  display: inline-flex; flex-direction: column; align-items: flex-start; gap: 1px; padding: 8px 14px; border-radius: var(--r);
+  border: 1px solid var(--line-strong); background: var(--surface); text-align: left; transition: all .15s var(--ease);
+}
+.preset strong { font-size: 13px; font-weight: 600; }
+.preset small { font-size: 12px; color: var(--muted); }
+.preset:hover { border-color: var(--rose); background: var(--rose-50); }
+.days { margin-top: 18px; border-top: 1px solid var(--line); }
+.day-row { display: grid; grid-template-columns: 120px minmax(0, 1fr); gap: 8px 16px; padding: 12px 0; border-bottom: 1px solid var(--line); }
+.day-head { display: flex; align-items: center; gap: 12px; min-height: 44px; }
+.day-name { font-weight: 600; width: 40px; }
+.day-body { display: grid; gap: 8px; min-width: 0; }
+.span-row { display: flex; align-items: center; gap: 8px; }
+.span-row .select { min-height: 44px; flex: 1; min-width: 0; padding-left: 12px; font-size: 15px; }
+.span-row .to { color: var(--muted); font-size: 14px; }
+.span-row .icon-btn.sm { visibility: hidden; }
+.day-body.multi .span-row .icon-btn.sm { visibility: visible; }
+.add-span { justify-self: start; font-size: 13px; text-decoration: none; padding: 4px 0; }
+.closed-text { display: flex; align-items: center; min-height: 44px; color: var(--muted); font-size: 15px; }
+.day-row.closed .span-row, .day-row.closed .add-span { display: none; }
+.day-row:not(.closed) .closed-text { display: none; }
+.copy-tools { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+
+.stars { display: inline-flex; gap: 4px; }
+.star-btn { border: 0; background: none; padding: 4px; color: #e2d3cf; border-radius: 8px; }
+.star-btn .ic { width: 30px; height: 30px; }
+.star-btn.on { color: var(--rose); }
+.star-btn:hover { color: var(--rose-600); }
+
+.tag-box {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 6px; min-height: 48px; padding: 6px 8px;
+  border: 1px solid var(--line-strong); border-radius: var(--r-sm); background: var(--surface); cursor: text;
+}
+.tag-box:focus-within { border-color: var(--rose); box-shadow: 0 0 0 4px rgba(168, 70, 107, .12); }
+.tag-box input { flex: 1; min-width: 140px; border: 0; outline: none; padding: 6px; background: none; }
+.tag-chip {
+  display: inline-flex; align-items: center; gap: 4px; padding: 4px 6px 4px 12px; border-radius: var(--r-pill);
+  background: var(--lilac-50); color: var(--lilac); font-size: 13px; font-weight: 600;
+}
+.tag-chip button { border: 0; background: none; display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; color: inherit; padding: 0; }
+.tag-chip button:hover { background: rgba(108, 90, 156, .14); }
+.tag-chip .ic { width: 13px; height: 13px; }
+
+/* Detail sheet */
+.detail-head { display: flex; gap: 16px; align-items: flex-start; }
+.detail-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 24px; }
+.glance { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 16px; }
+.tile { padding: 14px 16px; border-radius: var(--r); background: var(--surface-2); }
+.tile small { display: block; font-size: 12px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); }
+.tile strong { display: block; margin-top: 4px; font-weight: 600; font-size: 15px; }
+.tile .none { color: var(--muted); font-weight: 500; }
+.hours-table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 15px; }
+.hours-table td { padding: 9px 0; border-bottom: 1px solid var(--line); }
+.hours-table td:last-child { text-align: right; color: var(--ink-2); }
+.hours-table tr.today td { font-weight: 700; color: var(--rose-600); }
+.kitchen-line { display: flex; align-items: center; gap: 8px; margin-top: 14px; color: var(--amber); font-weight: 600; font-size: 14px; }
+.kitchen-line .ic { width: 16px; height: 16px; }
+.note-block { margin-top: 12px; padding: 16px 18px; border-radius: var(--r); background: var(--surface-2); white-space: pre-wrap; color: var(--ink-2); }
+.dsec { padding: 24px 0; border-top: 1px solid var(--line); }
+.dsec h3 { font-size: 16px; font-weight: 700; }
+.detail-foot-note { color: var(--muted); font-size: 13px; }
+
+/* ════════════════════════════════════════════════════════════
+   Toast & FAB
+   ════════════════════════════════════════════════════════════ */
+.toasts { position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%); z-index: 100; display: grid; gap: 10px; width: max-content; max-width: calc(100vw - 32px); }
+.toast {
+  display: flex; align-items: center; gap: 16px; padding: 12px 12px 12px 20px; border-radius: var(--r-pill);
+  background: var(--ink); color: #fff; box-shadow: var(--shadow-lg); font-size: 15px; animation: toastIn .25s var(--ease);
+}
+.toast .btn { min-height: 36px; padding: 0 14px; color: #f7c7d8; }
+.toast .btn:hover { background: rgba(255, 255, 255, .1); }
+@keyframes toastIn { from { transform: translateY(12px); opacity: 0; } }
+.fab {
+  display: none; position: fixed; right: 20px; bottom: calc(20px + env(safe-area-inset-bottom)); z-index: 40;
+  width: 60px; height: 60px; border-radius: 50%; border: 0; background: var(--rose); color: #fff;
+  box-shadow: 0 12px 28px rgba(168, 70, 107, .4); place-items: center;
+}
+.fab .ic { width: 26px; height: 26px; }
+
+/* ════════════════════════════════════════════════════════════
+   Responsive
+   ════════════════════════════════════════════════════════════ */
+@media (max-width: 960px) {
+  .planner { grid-template-columns: 1fr 1fr; }
+  .pl-area { grid-column: 1 / -1; }
+  .pl-field + .pl-field { border-left: 0; }
+  .pl-area { border-bottom: 1px solid var(--line); }
+  .pl-guests { border-left: 1px solid var(--line) !important; }
+  .auth { grid-template-columns: 1fr; }
+  .auth-art { border-radius: var(--r-lg) var(--r-lg) 0 0; min-height: 0; padding: 40px; }
+  .auth-form { border-radius: 0 0 var(--r-lg) var(--r-lg); padding: 40px; }
+}
+@media (max-width: 720px) {
+  .card { grid-template-columns: 48px minmax(0, 1fr); gap: 16px; padding: 20px; }
+  .avatar { width: 48px; height: 48px; border-radius: 14px; font-size: 17px; }
+  .card-title h3 { font-size: 20px; }
+  .card-side {
+    grid-column: 1 / -1; flex-direction: row; align-items: center; min-width: 0;
+    padding-top: 16px; border-top: 1px solid var(--line);
+  }
+  .card-cta { flex-direction: row; align-items: center; flex: 1; justify-content: space-between; }
+  .card-side .fav:empty { display: none; }
+}
+@media (max-width: 640px) {
+  body { font-size: 15px; }
+  .topbar { padding: 16px; }
+  .logo-text { font-size: 18px; }
+  .page { padding: 0 16px 120px; }
+  .hero { padding-top: 12px; }
+  .hero-sub { font-size: 15px; }
+  .planner { grid-template-columns: 1fr; margin-top: 24px; }
+  .pl-field { padding: 14px 18px 12px; }
+  .pl-field + .pl-field { border-top: 1px solid var(--line); }
+  .pl-guests { border-left: 0 !important; }
+  .quick { flex-wrap: nowrap; overflow-x: auto; margin: 16px -16px 0; padding: 0 16px 4px; scrollbar-width: none; }
+  .quick::-webkit-scrollbar { display: none; }
+  .qchip { flex: none; }
+  .qchip-more { margin-left: 0; }
+  .results { margin-top: 36px; }
+  .toolbar { align-items: stretch; flex-direction: column; }
+  .toolbar-right { width: 100%; flex-wrap: nowrap; gap: 8px; }
+  .search-mini { flex: 1; min-width: 0; }
+  .search-mini input { width: 100%; }
+  .sort-select { max-width: 150px; }
+  .hide-mobile { display: none !important; }
+  .list { margin-top: 20px; }
+  .fab { display: grid; }
+  dialog.sheet, dialog.sheet.wide {
+    inset: auto 0 0 0; width: 100vw; height: auto; max-height: 92vh; border-radius: var(--r-lg) var(--r-lg) 0 0;
+  }
+  dialog.sheet[open] { animation-name: sheetUp; }
+  @keyframes sheetUp { from { transform: translateY(60px); opacity: 0; } to { transform: none; opacity: 1; } }
+  .sheet-head { padding: 22px 20px 16px; }
+  .sheet-body { padding: 4px 20px 24px; }
+  .sheet-foot { padding: 14px 20px calc(14px + env(safe-area-inset-bottom)); }
+  .row { --cols: 1 !important; }
+  .day-row { grid-template-columns: 1fr; }
+  .day-row.closed .day-body { display: none; }
+  .day-row.closed .day-head::after { content: "Closed"; margin-left: auto; color: var(--muted); font-size: 15px; }
+  .sheet-foot { gap: 6px; }
+  .sheet-foot .btn { padding: 0 14px; }
+  .auth { padding: 0 16px; margin-top: 8px; }
+  .auth-art { padding: 28px; }
+  .auth-art h1 { font-size: 30px; }
+  .auth-form { padding: 28px; }
+  .toasts { bottom: 96px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+}
+</style>
+</head>
+<body>
+
+<div id="demoBanner" class="demo-banner" hidden>
+  <span><strong>Demo mode</strong>: entries are saved in this browser only. Add your Supabase details to <code>config.js</code> to use real accounts.</span>
+</div>
+
+<header class="topbar">
+  <a class="logo" href="#" aria-label="Where the Food At">
+    <span class="logo-mark"><i data-ic="utensils"></i></span>
+    <span class="logo-text">Where the <em>Food</em> At</span>
+  </a>
+  <div class="top-right">
+    <label id="wsWrap" hidden><span class="sr-only">Which list</span><select id="wsSelect" class="ws-select bare-select"></select></label>
+    <details class="menu" id="userMenu" hidden>
+      <summary class="avatar-btn" aria-label="Account menu"><span id="userInitial">?</span></summary>
+      <div class="menu-pop">
+        <div class="menu-head"><small id="menuLabel">Signed in as</small><strong id="userEmail"></strong></div>
+        <button class="menu-item" id="resetDemoBtn" type="button" hidden><i data-ic="refresh"></i>Reset demo data</button>
+        <button class="menu-item" id="signOutBtn" type="button" hidden><i data-ic="logout"></i>Sign out</button>
+      </div>
+    </details>
+  </div>
+</header>
+
+<!-- ═════════════════════════════ Auth ═════════════════════════════ -->
+<main id="authView" class="auth" hidden>
+  <div class="auth-art">
+    <span class="logo-mark lg"><i data-ic="utensils" class="ic-lg"></i></span>
+    <h1>Every favourite spot,<br><em>ready when you are.</em></h1>
+    <p>Save the places you love, then find the right one for any day, time and table size.</p>
+  </div>
+  <form id="authForm" class="auth-form" novalidate>
+    <h2 id="authTitle">Welcome back</h2>
+    <p class="lead" id="authLead">Sign in to see your saved places.</p>
+    <div id="authMsg" class="alert" role="alert" hidden></div>
+    <button type="button" class="btn btn-google btn-block" id="googleBtn">
+      <svg class="g-logo" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+      Continue with Google
+    </button>
+    <div class="or-divider"><span>or use email</span></div>
+    <div class="field">
+      <label for="authEmail">Email</label>
+      <input id="authEmail" class="input" type="email" autocomplete="email" required>
+    </div>
+    <div class="field">
+      <label for="authPassword">Password</label>
+      <div class="pw">
+        <input id="authPassword" class="input" type="password" autocomplete="current-password" minlength="8" required aria-describedby="pwHelp">
+        <button type="button" class="pw-toggle" id="pwToggle" aria-pressed="false">Show</button>
+      </div>
+      <p class="help" id="pwHelp" hidden>At least 8 characters.</p>
+    </div>
+    <button class="btn btn-primary btn-block" id="authSubmit" type="submit">Sign in</button>
+    <p class="auth-switch"><span id="authSwitchText">New here?</span> <button type="button" class="link-btn" id="authSwitch">Create an account</button></p>
+  </form>
+</main>
+
+<!-- ═════════════════════════════ App ═════════════════════════════ -->
+<main id="appView" class="page" hidden>
+  <section class="hero" aria-labelledby="heroTitle">
+    <h1 class="hero-title" id="heroTitle">Where shall we <em>eat</em>?</h1>
+    <p class="hero-sub">Pick a spot, a time and how many of you there are. We'll show the saved places that fit.</p>
+
+    <div class="planner" role="search" aria-label="Find a place">
+      <div class="pl-field pl-area">
+        <label for="fArea">Near</label>
+        <div class="pl-input">
+          <i data-ic="pin"></i>
+          <input id="fArea" data-f="area" list="areaOptions" placeholder="Postcode, suburb or street" autocomplete="off" enterkeyhint="search">
+          <button type="button" class="clear-x" id="clearArea" aria-label="Clear area" hidden><i data-ic="x"></i></button>
+        </div>
+        <datalist id="areaOptions"></datalist>
+      </div>
+      <div class="pl-field pl-when">
+        <label for="fDay">When</label>
+        <div class="pl-input">
+          <i data-ic="calendar"></i>
+          <select id="fDay" data-f="day" class="bare-select">
+            <option value="">Any day</option>
+            <option value="0">Monday</option><option value="1">Tuesday</option><option value="2">Wednesday</option>
+            <option value="3">Thursday</option><option value="4">Friday</option><option value="5">Saturday</option><option value="6">Sunday</option>
+          </select>
+          <input id="fTime" type="time" data-f="time" aria-label="Time">
+        </div>
+      </div>
+      <div class="pl-field pl-guests">
+        <label for="fGroup">Guests</label>
+        <div class="pl-input">
+          <i data-ic="users"></i>
+          <button type="button" class="step-btn" data-step="-1" aria-label="Fewer guests">−</button>
+          <input id="fGroup" data-f="group" type="number" min="1" max="99" inputmode="numeric" placeholder="Any">
+          <button type="button" class="step-btn" data-step="1" aria-label="More guests">+</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="quick" id="quick" aria-label="Quick filters">
+      <button type="button" class="qchip" data-quick="now" aria-pressed="false"><i data-ic="clock"></i>Open now</button>
+      <span class="qsep" aria-hidden="true"></span>
+      <button type="button" class="qchip" data-quick="meal:breakfast" aria-pressed="false">Breakfast</button>
+      <button type="button" class="qchip" data-quick="meal:brunch" aria-pressed="false">Brunch</button>
+      <button type="button" class="qchip" data-quick="meal:lunch" aria-pressed="false">Lunch</button>
+      <button type="button" class="qchip" data-quick="meal:dinner" aria-pressed="false">Dinner</button>
+      <span class="qsep" aria-hidden="true"></span>
+      <button type="button" class="qchip" data-quick="parking" aria-pressed="false"><i data-ic="parking"></i>Easy parking</button>
+      <button type="button" class="qchip" data-quick="book" aria-pressed="false"><i data-ic="calendar"></i>Can book</button>
+      <button type="button" class="qchip" data-quick="drinks" aria-pressed="false"><i data-ic="wine"></i>Alcohol</button>
+      <button type="button" class="qchip qchip-more" id="moreFiltersBtn" aria-haspopup="dialog"><i data-ic="sliders"></i>More filters <span class="count-dot" id="moreCount" hidden></span></button>
+    </div>
+  </section>
+
+  <section class="results" aria-labelledby="resultsTitle">
+    <div class="toolbar">
+      <div>
+        <h2 class="results-title" id="resultsTitle">Your places</h2>
+        <p class="results-meta" id="resultsMeta" aria-live="polite"></p>
+      </div>
+      <div class="toolbar-right">
+        <div class="search-mini">
+          <i data-ic="search"></i>
+          <input class="input" id="fText" data-f="text" type="search" placeholder="Search names, tags, notes" aria-label="Search names, tags and notes">
+        </div>
+        <label><span class="sr-only">Sort by</span>
+          <select id="sortBy" class="select sort-select">
+            <option value="best">Best match</option>
+            <option value="ours">Our favourites</option>
+            <option value="public">Top rated</option>
+            <option value="name">A to Z</option>
+            <option value="newest">Recently added</option>
+          </select>
+        </label>
+        <button class="btn btn-primary hide-mobile" id="addBtn" type="button"><i data-ic="plus"></i>Add a place</button>
+      </div>
+    </div>
+    <div class="active-chips" id="activeChips" aria-label="Active filters"></div>
+    <div id="list" class="list"></div>
+  </section>
+</main>
+
+<button class="fab" id="fab" type="button" aria-label="Add a place" hidden><i data-ic="plus"></i></button>
+<div class="toasts" id="toasts" role="status" aria-live="polite"></div>
+
+<!-- ═════════════════════════════ Filters sheet ═════════════════════════════ -->
+<dialog id="filtersDlg" class="sheet" aria-labelledby="filtersTitle">
+  <div class="sheet-head">
+    <div><p class="eyebrow">Narrow it down</p><h2 id="filtersTitle">Filters</h2></div>
+    <button type="button" class="icon-btn" data-close aria-label="Close filters"><i data-ic="x"></i></button>
+  </div>
+  <div class="sheet-body">
+    <section class="fsec">
+      <h3>Food</h3>
+      <div class="chips">
+        <label class="chip"><input type="checkbox" data-f="meals" value="breakfast"><span>Breakfast</span></label>
+        <label class="chip"><input type="checkbox" data-f="meals" value="brunch"><span>Brunch</span></label>
+        <label class="chip"><input type="checkbox" data-f="meals" value="lunch"><span>Lunch</span></label>
+        <label class="chip"><input type="checkbox" data-f="meals" value="dinner"><span>Dinner</span></label>
+        <label class="chip"><input type="checkbox" data-f="meals" value="snacks"><span>Snacks</span></label>
+      </div>
+    </section>
+    <section class="fsec">
+      <h3>Drinks</h3>
+      <div class="seg" role="radiogroup" aria-label="Alcohol">
+        <label><input type="radio" name="f-alcohol" data-f="alcohol" value=""><span>Any</span></label>
+        <label><input type="radio" name="f-alcohol" data-f="alcohol" value="any"><span>Serves or BYO</span></label>
+        <label><input type="radio" name="f-alcohol" data-f="alcohol" value="licensed"><span>Licensed</span></label>
+        <label><input type="radio" name="f-alcohol" data-f="alcohol" value="byo"><span>BYO allowed</span></label>
+        <label><input type="radio" name="f-alcohol" data-f="alcohol" value="none"><span>Alcohol-free</span></label>
+      </div>
+    </section>
+    <section class="fsec">
+      <h3>Price</h3>
+      <p class="help">Up to this price level.</p>
+      <div class="seg" role="radiogroup" aria-label="Maximum price">
+        <label><input type="radio" name="f-price" data-f="price" value=""><span>Any</span></label>
+        <label><input type="radio" name="f-price" data-f="price" value="1"><span>$</span></label>
+        <label><input type="radio" name="f-price" data-f="price" value="2"><span>$$</span></label>
+        <label><input type="radio" name="f-price" data-f="price" value="3"><span>$$$</span></label>
+        <label><input type="radio" name="f-price" data-f="price" value="4"><span>$$$$</span></label>
+      </div>
+    </section>
+    <section class="fsec">
+      <h3>Booking</h3>
+      <div class="seg" role="radiogroup" aria-label="Booking">
+        <label><input type="radio" name="f-booking" data-f="booking" value=""><span>Any</span></label>
+        <label><input type="radio" name="f-booking" data-f="booking" value="bookable"><span>Can book</span></label>
+        <label><input type="radio" name="f-booking" data-f="booking" value="online"><span>Online</span></label>
+        <label><input type="radio" name="f-booking" data-f="booking" value="phone"><span>By phone</span></label>
+        <label><input type="radio" name="f-booking" data-f="booking" value="walk_in"><span>Walk-in</span></label>
+      </div>
+    </section>
+    <section class="fsec">
+      <h3>Service</h3>
+      <label class="switch-row"><span><strong>Delivery</strong><span class="help">They deliver, directly or through an app.</span></span><input type="checkbox" class="switch" data-f="delivery"></label>
+      <label class="switch-row"><span><strong>Takeaway</strong><span class="help">You can pick up food to go.</span></span><input type="checkbox" class="switch" data-f="takeaway"></label>
+    </section>
+    <section class="fsec">
+      <h3>Parking</h3>
+      <div class="seg" role="radiogroup" aria-label="Parking">
+        <label><input type="radio" name="f-parking" data-f="parkingMin" value=""><span>Any</span></label>
+        <label><input type="radio" name="f-parking" data-f="parkingMin" value="2"><span>OK or easy</span></label>
+        <label><input type="radio" name="f-parking" data-f="parkingMin" value="3"><span>Easy only</span></label>
+      </div>
+    </section>
+    <section class="fsec">
+      <h3>Public transport</h3>
+      <div class="seg" role="radiogroup" aria-label="Public transport">
+        <label><input type="radio" name="f-transport" data-f="transportMin" value=""><span>Any</span></label>
+        <label><input type="radio" name="f-transport" data-f="transportMin" value="2"><span>OK or easy</span></label>
+        <label><input type="radio" name="f-transport" data-f="transportMin" value="3"><span>Easy only</span></label>
+      </div>
+    </section>
+    <section class="fsec">
+      <h3>Public rating</h3>
+      <div class="seg" role="radiogroup" aria-label="Minimum public rating">
+        <label><input type="radio" name="f-public" data-f="publicMin" value=""><span>Any</span></label>
+        <label><input type="radio" name="f-public" data-f="publicMin" value="3.5"><span>3.5+</span></label>
+        <label><input type="radio" name="f-public" data-f="publicMin" value="4"><span>4.0+</span></label>
+        <label><input type="radio" name="f-public" data-f="publicMin" value="4.5"><span>4.5+</span></label>
+      </div>
+    </section>
+    <section class="fsec">
+      <h3>Our rating</h3>
+      <div class="seg" role="radiogroup" aria-label="Minimum rating from us">
+        <label><input type="radio" name="f-ours" data-f="oursMin" value=""><span>Any</span></label>
+        <label><input type="radio" name="f-ours" data-f="oursMin" value="3"><span>3+</span></label>
+        <label><input type="radio" name="f-ours" data-f="oursMin" value="4"><span>4+</span></label>
+        <label><input type="radio" name="f-ours" data-f="oursMin" value="5"><span>Favourites (5)</span></label>
+      </div>
+    </section>
+    <section class="fsec">
+      <label class="switch-row">
+        <span><strong>Include incomplete entries</strong><span class="help">Also show places where the info for a filter hasn't been added yet.</span></span>
+        <input type="checkbox" class="switch" data-f="includeUnknown">
+      </label>
+    </section>
+  </div>
+  <div class="sheet-foot">
+    <button type="button" class="btn btn-ghost" id="clearFiltersBtn">Clear all</button>
+    <span class="grow"></span>
+    <button type="button" class="btn btn-primary" data-close id="showResultsBtn">Show places</button>
+  </div>
+</dialog>
+
+<!-- ═════════════════════════════ Detail sheet ═════════════════════════════ -->
+<dialog id="detailDlg" class="sheet wide" aria-labelledby="detailTitle">
+  <div class="sheet-head">
+    <div id="detailHead"></div>
+    <button type="button" class="icon-btn" data-close aria-label="Close details"><i data-ic="x"></i></button>
+  </div>
+  <div class="sheet-body" id="detailBody"></div>
+  <div class="sheet-foot">
+    <span class="detail-foot-note" id="detailFootNote"></span>
+    <span class="grow"></span>
+    <button type="button" class="btn btn-outline" id="detailEditBtn"><i data-ic="edit"></i>Edit</button>
+  </div>
+</dialog>
+
+<!-- ═════════════════════════════ Editor sheet ═════════════════════════════ -->
+<dialog id="editDlg" class="sheet wide" aria-labelledby="editTitle">
+  <form id="editForm" novalidate>
+    <div class="sheet-head">
+      <div><p class="eyebrow" id="editEyebrow">New place</p><h2 id="editTitle">Add a place</h2></div>
+      <button type="button" class="icon-btn" data-editor-close aria-label="Close"><i data-ic="x"></i></button>
+    </div>
+    <div class="sheet-body" id="editBody">
+      <div id="editErrors" class="alert" role="alert" hidden style="margin-top:24px"></div>
+
+      <section class="esec">
+        <h3 class="esec-title">The basics</h3>
+        <div class="esec-body">
+          <div class="field">
+            <label for="eName">Name <span class="req">required</span></label>
+            <input id="eName" name="name" class="input" placeholder="e.g. Golden Lantern Dumpling House" autocomplete="off">
+          </div>
+          <div class="field">
+            <span class="label" id="catLabel">Type of place</span>
+            <div class="chips" role="radiogroup" aria-labelledby="catLabel">
+              <label class="chip"><input type="radio" name="category" value="restaurant"><span>Restaurant</span></label>
+              <label class="chip"><input type="radio" name="category" value="cafe"><span>Café</span></label>
+              <label class="chip"><input type="radio" name="category" value="bar"><span>Bar</span></label>
+              <label class="chip"><input type="radio" name="category" value="pub"><span>Pub</span></label>
+              <label class="chip"><input type="radio" name="category" value="takeaway"><span>Takeaway</span></label>
+              <label class="chip"><input type="radio" name="category" value="bakery"><span>Bakery</span></label>
+              <label class="chip"><input type="radio" name="category" value="other"><span>Other</span></label>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="esec">
+        <h3 class="esec-title">Where it is</h3>
+        <p class="esec-help">Suburb and postcode power the “Near” search.</p>
+        <div class="esec-body">
+          <div class="field"><label for="eStreet">Street address</label><input id="eStreet" name="street" class="input" placeholder="12 Station St" autocomplete="off"></div>
+          <div class="row" style="--cols:3">
+            <div class="field"><label for="eSuburb">Suburb</label><input id="eSuburb" name="suburb" class="input" placeholder="Box Hill" autocomplete="off"></div>
+            <div class="field"><label for="ePostcode">Postcode</label><input id="ePostcode" name="postcode" class="input" inputmode="numeric" maxlength="4" placeholder="3128" autocomplete="off"></div>
+            <div class="field"><label for="eState">State</label>
+              <select id="eState" name="state" class="select"><option value="">Choose…</option><option>VIC</option><option>NSW</option><option>QLD</option><option>SA</option><option>WA</option><option>TAS</option><option>ACT</option><option>NT</option></select>
+            </div>
+          </div>
+          <div class="row">
+            <div class="field"><label for="ePhone">Phone</label><input id="ePhone" name="phone" class="input" type="tel" placeholder="03 9000 0000" autocomplete="off"></div>
+            <div class="field"><label for="eWebsite">Website</label><input id="eWebsite" name="website" class="input" type="url" placeholder="example.com" autocomplete="off"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="esec">
+        <h3 class="esec-title">Opening hours</h3>
+        <div class="esec-body">
+          <div class="seg" role="radiogroup" aria-label="Opening hours">
+            <label><input type="radio" name="hoursMode" value="unknown" checked><span>Not sure yet</span></label>
+            <label><input type="radio" name="hoursMode" value="set"><span>Add opening hours</span></label>
+          </div>
+          <div id="hoursEditor" hidden>
+            <p class="subhead">Quick fill</p>
+            <p class="help">Applies to every day that's switched on.</p>
+            <div class="presets" id="presets">
+              <button type="button" class="preset" data-preset="07:00-15:00"><strong>Café hours</strong><small>7am – 3pm</small></button>
+              <button type="button" class="preset" data-preset="11:30-22:00"><strong>Lunch &amp; dinner</strong><small>11:30am – 10pm</small></button>
+              <button type="button" class="preset" data-preset="12:00-15:00,17:30-22:00"><strong>Split service</strong><small>12–3pm, 5:30–10pm</small></button>
+              <button type="button" class="preset" data-preset="17:30-22:00"><strong>Dinner only</strong><small>5:30pm – 10pm</small></button>
+              <button type="button" class="preset" data-preset="16:00-01:00"><strong>Bar hours</strong><small>4pm – 1am</small></button>
+            </div>
+            <div class="days" id="days"></div>
+            <div class="copy-tools">
+              <button type="button" class="btn btn-outline btn-xs" id="copyWeekdays">Copy Monday to Tue–Fri</button>
+              <button type="button" class="btn btn-outline btn-xs" id="copyAll">Copy Monday to every day</button>
+            </div>
+          </div>
+          <div class="row" style="margin-top:24px">
+            <div class="field">
+              <label for="eKitchen">Kitchen closes</label>
+              <select id="eKitchen" name="kitchen_closes" class="select"></select>
+              <p class="help">Leave as is if food is served until closing.</p>
+            </div>
+            <div class="field">
+              <label for="eHoursNote">Hours note</label>
+              <input id="eHoursNote" name="hours_note" class="input" placeholder="e.g. Last orders 30 min before close" autocomplete="off">
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="esec">
+        <h3 class="esec-title">Food &amp; drink</h3>
+        <div class="esec-body">
+          <div class="field">
+            <span class="label">Food</span>
+            <div class="seg" role="radiogroup" aria-label="Food">
+              <label><input type="radio" name="food" value="meals" checked><span>Meals</span></label>
+              <label><input type="radio" name="food" value="snacks"><span>Snacks only</span></label>
+              <label><input type="radio" name="food" value="none"><span>No food</span></label>
+            </div>
+            <p class="help" id="foodHint"></p>
+          </div>
+          <div class="field" id="mealsField">
+            <div class="label-row">
+              <span class="label">Meals served</span>
+              <span id="mealsBadge"></span>
+            </div>
+            <div class="chips" id="mealChips">
+              <label class="chip"><input type="checkbox" name="meals" value="breakfast"><span>Breakfast</span></label>
+              <label class="chip"><input type="checkbox" name="meals" value="brunch"><span>Brunch</span></label>
+              <label class="chip"><input type="checkbox" name="meals" value="lunch"><span>Lunch</span></label>
+              <label class="chip"><input type="checkbox" name="meals" value="dinner"><span>Dinner</span></label>
+              <label class="chip"><input type="checkbox" name="snacks" value="snacks"><span>+ Snacks</span></label>
+            </div>
+            <p class="help" id="mealsHelp"></p>
+          </div>
+          <div class="field">
+            <span class="label">Alcohol</span>
+            <div class="seg" role="radiogroup" aria-label="Alcohol">
+              <label><input type="radio" name="alcohol" value="" checked><span>Not sure</span></label>
+              <label><input type="radio" name="alcohol" value="licensed"><span>Licensed</span></label>
+              <label><input type="radio" name="alcohol" value="byo"><span>BYO</span></label>
+              <label><input type="radio" name="alcohol" value="licensed_byo"><span>Licensed + BYO</span></label>
+              <label><input type="radio" name="alcohol" value="none"><span>No alcohol</span></label>
+            </div>
+          </div>
+          <div style="margin-top:12px">
+            <label class="switch-row"><span><strong>Delivery</strong><span class="help">Directly or through a delivery app.</span></span><input type="checkbox" class="switch" name="delivery"></label>
+            <label class="switch-row"><span><strong>Takeaway</strong><span class="help">Food to go.</span></span><input type="checkbox" class="switch" name="takeaway"></label>
+          </div>
+        </div>
+      </section>
+
+      <section class="esec">
+        <h3 class="esec-title">Groups &amp; booking</h3>
+        <div class="esec-body">
+          <div class="field">
+            <label for="eGroup">Largest group that fits comfortably</label>
+            <div class="stepper">
+              <button type="button" class="step-btn" data-estep="-1" aria-label="Smaller group">−</button>
+              <input id="eGroup" name="max_group_size" class="input" type="number" min="1" max="200" inputmode="numeric" placeholder="—">
+              <button type="button" class="step-btn" data-estep="1" aria-label="Larger group">+</button>
+            </div>
+          </div>
+          <div class="field">
+            <span class="label">Price</span>
+            <div class="seg" role="radiogroup" aria-label="Price">
+              <label><input type="radio" name="price_level" value="" checked><span>Not sure</span></label>
+              <label><input type="radio" name="price_level" value="1"><span>$</span></label>
+              <label><input type="radio" name="price_level" value="2"><span>$$</span></label>
+              <label><input type="radio" name="price_level" value="3"><span>$$$</span></label>
+              <label><input type="radio" name="price_level" value="4"><span>$$$$</span></label>
+            </div>
+          </div>
+          <div class="field">
+            <span class="label">How to book</span>
+            <div class="seg" role="radiogroup" aria-label="How to book">
+              <label><input type="radio" name="booking_method" value="unknown" checked><span>Not sure</span></label>
+              <label><input type="radio" name="booking_method" value="online"><span>Online</span></label>
+              <label><input type="radio" name="booking_method" value="phone"><span>By phone</span></label>
+              <label><input type="radio" name="booking_method" value="walk_in"><span>Walk-in only</span></label>
+            </div>
+            <p class="help" id="bookingHint"></p>
+          </div>
+          <div class="field" id="bookingUrlField" hidden>
+            <label for="eBookingUrl">Booking link</label>
+            <input id="eBookingUrl" name="booking_url" class="input" type="url" placeholder="Leave blank to use the website" autocomplete="off">
+          </div>
+          <div class="field">
+            <label for="eBookingNotes">Booking notes</label>
+            <input id="eBookingNotes" name="booking_notes" class="input" placeholder="e.g. Book 2 weeks ahead for weekends, ask for the back room" autocomplete="off">
+          </div>
+        </div>
+      </section>
+
+      <section class="esec">
+        <h3 class="esec-title">Getting there</h3>
+        <div class="esec-body">
+          <div class="field">
+            <span class="label">Parking</span>
+            <div class="seg" role="radiogroup" aria-label="Parking">
+              <label><input type="radio" name="parking_ease" value="" checked><span>Not sure</span></label>
+              <label><input type="radio" name="parking_ease" value="3"><span>Easy</span></label>
+              <label><input type="radio" name="parking_ease" value="2"><span>OK</span></label>
+              <label><input type="radio" name="parking_ease" value="1"><span>Hard</span></label>
+            </div>
+          </div>
+          <div class="field">
+            <label for="eParkingNotes">Parking notes</label>
+            <input id="eParkingNotes" name="parking_notes" class="input" placeholder="e.g. Free car park behind, 2-hour limit" autocomplete="off">
+          </div>
+          <div class="field">
+            <span class="label">Public transport</span>
+            <div class="seg" role="radiogroup" aria-label="Public transport">
+              <label><input type="radio" name="transport_ease" value="" checked><span>Not sure</span></label>
+              <label><input type="radio" name="transport_ease" value="3"><span>Easy</span></label>
+              <label><input type="radio" name="transport_ease" value="2"><span>OK</span></label>
+              <label><input type="radio" name="transport_ease" value="1"><span>Hard</span></label>
+            </div>
+          </div>
+          <div class="field">
+            <label for="eTransportNotes">Public transport notes</label>
+            <input id="eTransportNotes" name="transport_notes" class="input" placeholder="e.g. Tram 109 stops out front, station 5 min walk" autocomplete="off">
+          </div>
+        </div>
+      </section>
+
+      <section class="esec">
+        <h3 class="esec-title">Ratings</h3>
+        <div class="esec-body">
+          <div class="row">
+            <div class="field">
+              <label for="ePublic">Public rating</label>
+              <input id="ePublic" name="public_rating" class="input" type="number" min="0" max="5" step="0.1" placeholder="e.g. 4.4" inputmode="decimal">
+              <p class="help">From Google, Yelp or similar, out of 5.</p>
+            </div>
+            <div class="field">
+              <span class="label" id="oursLabel">Our rating</span>
+              <input type="hidden" name="our_rating">
+              <div class="stars" id="stars" role="radiogroup" aria-labelledby="oursLabel"></div>
+              <p class="help">Tap the same heart again to clear.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="esec">
+        <h3 class="esec-title">Tags &amp; notes</h3>
+        <div class="esec-body">
+          <div class="field">
+            <label for="tagEntry">Tags</label>
+            <div class="tag-box" id="tagBox">
+              <span id="tagList" style="display:contents"></span>
+              <input id="tagEntry" list="tagOptions" placeholder="Type a tag, press Enter" autocomplete="off" enterkeyhint="enter">
+            </div>
+            <datalist id="tagOptions"></datalist>
+          </div>
+          <div class="field">
+            <label for="eNotes">Notes</label>
+            <textarea id="eNotes" name="notes" class="input" placeholder="Favourite dishes, who loved it, anything worth remembering"></textarea>
+          </div>
+        </div>
+      </section>
+    </div>
+    <div class="sheet-foot">
+      <button type="button" class="btn btn-danger" id="deleteBtn" hidden><i data-ic="trash"></i>Delete</button>
+      <span class="grow"></span>
+      <button type="button" class="btn btn-ghost" data-editor-close>Cancel</button>
+      <button type="submit" class="btn btn-primary" id="saveBtn">Save place</button>
+    </div>
+  </form>
+</dialog>
+
+<script>
+(() => {
+  "use strict";
+
+  // ══════════════════════════════════════════════════════════
+  // Icons (Lucide-style outlines)
+  // ══════════════════════════════════════════════════════════
+  const ICONS = {
+    utensils: '<path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2M7 2v20M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/>',
+    pin: '<path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/>',
+    calendar: '<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>',
+    clock: '<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>',
+    users: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>',
+    parking: '<rect x="3" y="3" width="18" height="18" rx="4"/><path d="M9 17V7h4a3 3 0 0 1 0 6H9"/>',
+    train: '<path d="M8 3.1V7a4 4 0 0 0 8 0V3.1M9 15l-1-1M15 15l1-1"/><path d="M9 19c-2.8 0-5-2.2-5-5v-4a8 8 0 0 1 16 0v4c0 2.8-2.2 5-5 5Z"/><path d="m8 19-2 3M16 19l2 3"/>',
+    wine: '<path d="M8 22h8M7 10h10M12 15v7M12 15a5 5 0 0 0 5-5c0-2-.5-4-2-8H9c-1.5 4-2 6-2 8a5 5 0 0 0 5 5Z"/>',
+    chef: '<path d="M17 21a1 1 0 0 0 1-1v-5.35c0-.46.31-.85.75-.97a4 4 0 0 0-1.2-7.84 5 5 0 0 0-9.1 0 4 4 0 0 0-1.2 7.84c.44.12.75.51.75.97V20a1 1 0 0 0 1 1ZM6 17h12"/>',
+    bike: '<circle cx="5.5" cy="17.5" r="3.5"/><circle cx="18.5" cy="17.5" r="3.5"/><path d="M15 6a1 1 0 1 0 0-2 1 1 0 0 0 0 2Zm-3 11.5V14l-3-3 4-3 2 3h2"/>',
+    bag: '<path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18M16 10a4 4 0 0 1-8 0"/>',
+    sliders: '<path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/>',
+    search: '<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>',
+    plus: '<path d="M12 5v14M5 12h14"/>',
+    x: '<path d="M18 6 6 18M6 6l12 12"/>',
+    star: '<path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>',
+    heart: '<path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>',
+    phone: '<path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/>',
+    globe: '<circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>',
+    nav: '<path d="m3 11 19-9-9 19-2-8-8-2z"/>',
+    edit: '<path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/>',
+    trash: '<path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>',
+    logout: '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>',
+    refresh: '<path d="M3 12a9 9 0 0 1 15-6.7L21 8M21 3v5h-5M21 12a9 9 0 0 1-15 6.7L3 16M3 21v-5h5"/>',
+    sparkle: '<path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M6 18l2.5-2.5M15.5 8.5 18 6"/>',
+  };
+  const ic = (name, cls = "") => `<svg class="ic ${cls}" viewBox="0 0 24 24" aria-hidden="true" focusable="false">${ICONS[name] || ""}</svg>`;
+  document.querySelectorAll("i[data-ic]").forEach((el) => { el.outerHTML = ic(el.dataset.ic, el.className); });
+
+  // ══════════════════════════════════════════════════════════
+  // Helpers
+  // ══════════════════════════════════════════════════════════
+  const DAYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
+  const DAY_SHORT = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+  const DAY_FULL = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+  const PERIODS = ["breakfast", "brunch", "lunch", "dinner"];
+  const MEALS = [...PERIODS, "snacks"];
+  const CATEGORY = { restaurant: "Restaurant", cafe: "Café", bar: "Bar", pub: "Pub", takeaway: "Takeaway", bakery: "Bakery", other: "Other" };
+  const EASE = { 1: "Hard", 2: "OK", 3: "Easy" };
+  const ALCOHOL = { licensed: "Licensed", byo: "BYO", licensed_byo: "Licensed + BYO", none: "No alcohol" };
+  const BOOKING_FILTER = { bookable: "Can book", online: "Books online", phone: "Books by phone", walk_in: "Walk-in only" };
+  const ALCOHOL_FILTER = { any: "Alcohol (licensed or BYO)", licensed: "Licensed", byo: "BYO allowed", none: "Alcohol-free" };
+
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+  const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const norm = (s) => String(s ?? "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/\s+/g, " ").trim();
+  const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
+  const blankToNull = (v) => (v === "" || v == null ? null : v);
+  const numOrNull = (v) => (v === "" || v == null || isNaN(Number(v)) ? null : Number(v));
+  const plural = (n, w) => `${n} ${w}${n === 1 ? "" : "s"}`;
+  const listText = (arr) => arr.length <= 1 ? arr.join("") : `${arr.slice(0, -1).join(", ")} & ${arr[arr.length - 1]}`;
+  const safeUrl = (u) => {
+    if (!u) return null;
+    const s = String(u).trim();
+    try {
+      const url = new URL(/^https?:\/\//i.test(s) ? s : "https://" + s);
+      return url.protocol === "http:" || url.protocol === "https:" ? url.href : null;
+    } catch { return null; }
+  };
+  const telHref = (p) => "tel:" + String(p).replace(/[^\d+]/g, "");
+  const ls = {
+    get(k) { try { return localStorage.getItem(k); } catch { return null; } },
+    set(k, v) { try { localStorage.setItem(k, v); } catch { /* storage unavailable */ } },
+    del(k) { try { localStorage.removeItem(k); } catch { /* storage unavailable */ } },
+  };
+  const pad = (n) => String(n).padStart(2, "0");
+  const todayIdx = () => (new Date().getDay() + 6) % 7; // Mon = 0
+  const nowHHMM = () => { const d = new Date(); return `${pad(d.getHours())}:${pad(d.getMinutes())}`; };
+  const hue = (name) => { let h = 0; for (const ch of String(name)) h = (h * 31 + ch.charCodeAt(0)) % 360; return h; };
+  const initials = (name) => String(name).split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0].toUpperCase()).join("");
+  const avatar = (name) => {
+    const h = hue(name);
+    return `<span class="avatar" style="background:hsl(${h} 70% 94%);color:hsl(${h} 38% 36%)" aria-hidden="true">${esc(initials(name))}</span>`;
+  };
+
+  // ══════════════════════════════════════════════════════════
+  // Time & opening hours
+  // ══════════════════════════════════════════════════════════
+  const toMin = (hhmm) => { const [h, m] = hhmm.split(":").map(Number); return h * 60 + m; };
+  const fromMin = (m) => `${pad(Math.floor(m / 60) % 24)}:${pad(m % 60)}`;
+  // Friendly short form for reading: 5:30pm, 9pm, midday, midnight.
+  const fmtTime = (hhmm) => {
+    const mins = toMin(hhmm);
+    if (mins === 0 || mins === 1440) return "midnight";
+    if (mins === 720) return "midday";
+    let h = Math.floor(mins / 60) % 24; const m = mins % 60;
+    const mer = h >= 12 ? "pm" : "am";
+    h = h % 12 || 12;
+    return `${h}${m ? ":" + pad(m) : ""}${mer}`;
+  };
+  // Consistent form for pickers: 5:30pm, 9:00pm, 12:00pm (midday).
+  const pickLabel = (hhmm) => {
+    const mins = toMin(hhmm);
+    let h = Math.floor(mins / 60) % 24; const m = mins % 60;
+    const mer = h >= 12 ? "pm" : "am";
+    const h12 = h % 12 || 12;
+    return `${h12}:${pad(m)}${mer}${mins === 0 ? " (midnight)" : mins === 720 ? " (midday)" : ""}`;
+  };
+  const fmtSpans = (spans) => (spans || []).map(([o, c]) => `${fmtTime(o)} – ${fmtTime(c)}`).join(", ");
+  const hasHours = (p) => !!p.hours && DAYS.some((d) => Array.isArray(p.hours[d]) && p.hours[d].length);
+
+  // The span covering a moment. `t` is minutes since that span's opening day began (can exceed 1440).
+  function coveringSpan(p, dayIdx, mins) {
+    if (!hasHours(p)) return null;
+    for (const [o, c] of p.hours[DAYS[dayIdx]] || []) {
+      const om = toMin(o), cm = toMin(c);
+      if (cm > om ? mins >= om && mins < cm : mins >= om) return { o, c, om, t: mins };
+    }
+    for (const [o, c] of p.hours[DAYS[(dayIdx + 6) % 7]] || []) {
+      const om = toMin(o), cm = toMin(c);
+      if (cm <= om && mins < cm) return { o, c, om, t: mins + 1440 }; // spills past midnight
+    }
+    return null;
+  }
+  // Is the kitchen still serving within this span? null when no kitchen time applies
+  // (none set, or it's at/after this session's closing time).
+  function kitchenOpen(p, span) {
+    if (!p.kitchen_closes || !span) return null;
+    let km = toMin(p.kitchen_closes);
+    if (km <= span.om) km += 1440;
+    let cm = toMin(span.c);
+    if (cm <= span.om) cm += 1440;
+    if (km >= cm) return null;
+    return span.t < km;
+  }
+  const isOpenAt = (p, dayIdx, mins) => (hasHours(p) ? !!coveringSpan(p, dayIdx, mins) : null);
+  const isOpenOnDay = (p, dayIdx) => (hasHours(p) ? (p.hours[DAYS[dayIdx]] || []).length > 0 : null);
+
+  // ── Meals worked out from opening hours ──
+  // A meal applies when a session overlaps its window for at least `min` minutes.
+  // Brunch is a daytime thing, so it also needs the session to finish by 5pm.
+  const MEAL_RULES = {
+    breakfast: { from: "06:00", to: "10:30", min: 90 },
+    brunch: { from: "09:30", to: "13:30", min: 150, closesBy: "17:00" },
+    lunch: { from: "11:30", to: "15:00", min: 90 },
+    dinner: { from: "17:30", to: "21:30", min: 120 },
+  };
+  function deriveMeals(hours, kitchen) {
+    const found = new Set();
+    for (const d of DAYS) {
+      for (const [o, c] of (hours && hours[d]) || []) {
+        const om = toMin(o);
+        let cm = toMin(c);
+        if (cm <= om) cm += 1440;
+        if (kitchen) { let km = toMin(kitchen); if (km <= om) km += 1440; if (km < cm) cm = km; }
+        for (const m of PERIODS) {
+          const r = MEAL_RULES[m];
+          const overlap = Math.min(cm, toMin(r.to)) - Math.max(om, toMin(r.from));
+          if (overlap >= r.min && (!r.closesBy || cm <= toMin(r.closesBy))) found.add(m);
+        }
+      }
+    }
+    return PERIODS.filter((m) => found.has(m));
+  }
+  const foodOf = (p) => p.food || "meals";
+
+  // ══════════════════════════════════════════════════════════
+  // Data layer: Supabase, or localStorage in demo mode
+  // ══════════════════════════════════════════════════════════
+  const cfg = window.WTFA_CONFIG || {};
+  const DEMO = !(cfg.supabaseUrl && cfg.supabaseKey);
+  const sb = !DEMO && window.supabase ? window.supabase.createClient(cfg.supabaseUrl, cfg.supabaseKey) : null;
+  const DEMO_KEY = "wtfa-demo-places-v2";
+  const WS_KEY = "wtfa-workspace";
+  const SORT_KEY = "wtfa-sort";
+
+  function demoSeed() {
+    const now = Date.now();
+    const mk = (i, p) => {
+      const place = {
+        id: crypto.randomUUID(), workspace_id: "demo", created_at: new Date(now - i * 86400000).toISOString(),
+        category: null, street: null, suburb: null, postcode: null, state: "VIC", phone: null, website: null,
+        price_level: null, food: "meals", meals_auto: true, meals: [], hours: {}, kitchen_closes: null, hours_note: null,
+        alcohol: null, max_group_size: null, booking_method: "unknown", booking_url: null, booking_notes: null,
+        delivery: null, takeaway: null, public_rating: null, our_rating: null, parking_ease: null, parking_notes: null,
+        transport_ease: null, transport_notes: null, tags: [], notes: null, ...p,
+      };
+      if (place.food === "meals" && place.meals_auto) {
+        place.meals = [...deriveMeals(place.hours, place.kitchen_closes), ...(p.snacks ? ["snacks"] : [])];
+      }
+      delete place.snacks;
+      return place;
+    };
+    const wk = (o, c) => [[o, c]];
+    return [
+      mk(1, { name: "Golden Lantern Dumpling House", category: "restaurant", street: "12 Station St", suburb: "Box Hill", postcode: "3128",
+        phone: "03 9000 1111", price_level: 2, max_group_size: 12, booking_method: "phone", alcohol: "byo",
+        hours: { mon: [], tue: wk("11:30", "21:30"), wed: wk("11:30", "21:30"), thu: wk("11:30", "21:30"), fri: wk("11:30", "22:00"), sat: wk("11:00", "22:00"), sun: wk("11:00", "21:00") },
+        kitchen_closes: "21:00", takeaway: true, delivery: true, public_rating: 4.3, our_rating: 5,
+        parking_ease: 2, parking_notes: "Shopping centre car park, 3 hours free", transport_ease: 3, transport_notes: "Box Hill station, 2 min walk",
+        tags: ["dumplings", "family", "lazy susan"], notes: "Ask for the round table upstairs for big groups." }),
+      mk(2, { name: "The Olive Grove", category: "restaurant", street: "88 Whitehorse Rd", suburb: "Box Hill", postcode: "3128",
+        phone: "03 9000 2222", website: "example.com/olivegrove", price_level: 3, max_group_size: 8, alcohol: "licensed",
+        booking_method: "online", booking_url: "https://example.com/olivegrove/book",
+        hours: { mon: [], tue: [], wed: wk("17:30", "22:00"), thu: wk("17:30", "22:00"), fri: wk("17:30", "23:00"), sat: [["12:00", "15:00"], ["17:30", "23:00"]], sun: wk("12:00", "16:00") },
+        hours_note: "Last seating 9pm", public_rating: 4.6, our_rating: 4, parking_ease: 1, parking_notes: "Street only, metered until 7pm",
+        transport_ease: 3, transport_notes: "Tram 109 stops out front", tags: ["date night", "pasta"] }),
+      mk(3, { name: "Little Fern Café", category: "cafe", street: "4 Burke Rd", suburb: "Camberwell", postcode: "3124",
+        price_level: 1, max_group_size: 6, booking_method: "walk_in", alcohol: "none", snacks: true,
+        hours: Object.fromEntries(DAYS.map((d) => [d, d === "sat" || d === "sun" ? wk("08:00", "15:00") : wk("07:00", "15:00")])),
+        takeaway: true, delivery: false, public_rating: 4.5, our_rating: 4, parking_ease: 3, parking_notes: "Big free car park behind the library",
+        transport_ease: 2, tags: ["coffee", "kid friendly"] }),
+      mk(4, { name: "Smokehouse 21", category: "restaurant", street: "21 Swan St", suburb: "Richmond", postcode: "3121",
+        phone: "03 9000 4444", price_level: 2, max_group_size: 20, alcohol: "licensed",
+        hours: { mon: [], tue: [], wed: wk("17:00", "23:00"), thu: wk("17:00", "23:00"), fri: wk("12:00", "01:00"), sat: wk("12:00", "01:00"), sun: wk("12:00", "21:00") },
+        kitchen_closes: "22:00", public_rating: 4.1, parking_ease: 1, transport_ease: 3, transport_notes: "East Richmond station across the road",
+        tags: ["bbq", "big groups"], notes: "Booking situation unclear, call ahead." }),
+      mk(5, { name: "Velvet Room", category: "bar", street: "7 Bridge Rd", suburb: "Richmond", postcode: "3121",
+        food: "snacks", meals_auto: false, meals: ["snacks"], alcohol: "licensed", price_level: 2, max_group_size: 15, booking_method: "online",
+        website: "example.com/velvet",
+        hours: { mon: [], tue: [], wed: wk("16:00", "23:00"), thu: wk("16:00", "00:00"), fri: wk("16:00", "01:00"), sat: wk("14:00", "01:00"), sun: wk("14:00", "22:00") },
+        public_rating: 4.4, our_rating: 4, parking_ease: 1, transport_ease: 2, tags: ["cocktails", "after dinner"] }),
+      mk(6, { name: "Noodle Corner", category: "takeaway", suburb: "Doncaster", postcode: "3108",
+        price_level: 1, meals_auto: false, meals: ["lunch", "dinner"], takeaway: true, delivery: true, public_rating: 3.9, tags: ["noodles", "quick"] }),
+    ];
+  }
+
+  const db = {
+    async listWorkspaces() {
+      if (DEMO) return [{ id: "demo", name: "Demo list" }];
+      const { data, error } = await sb.from("workspaces").select("id, name, created_at").order("created_at");
+      if (error) throw error;
+      return data;
+    },
+    async listPlaces(wsId) {
+      if (DEMO) {
+        const raw = ls.get(DEMO_KEY);
+        if (raw) { try { return JSON.parse(raw); } catch { /* reseed below */ } }
+        const seed = demoSeed();
+        ls.set(DEMO_KEY, JSON.stringify(seed));
+        return seed;
+      }
+      const { data, error } = await sb.from("places").select("*").eq("workspace_id", wsId).order("name");
+      if (error) throw error;
+      return data;
+    },
+    async save(place) {
+      if (DEMO) {
+        const all = await db.listPlaces("demo");
+        const now = new Date().toISOString();
+        let saved;
+        if (place.id) {
+          const i = all.findIndex((p) => p.id === place.id);
+          saved = { ...all[i], ...place, updated_at: now };
+          all[i] = saved;
+        } else {
+          saved = { ...place, id: crypto.randomUUID(), created_at: now, updated_at: now };
+          all.push(saved);
+        }
+        ls.set(DEMO_KEY, JSON.stringify(all));
+        return saved;
+      }
+      const { id, ...fields } = place;
+      const q = id ? sb.from("places").update(fields).eq("id", id).select().single() : sb.from("places").insert(fields).select().single();
+      const { data, error } = await q;
+      if (error) throw error;
+      return data;
+    },
+    async restore(place) {
+      if (DEMO) {
+        const all = await db.listPlaces("demo");
+        all.push(place);
+        ls.set(DEMO_KEY, JSON.stringify(all));
+        return place;
+      }
+      const { data, error } = await sb.from("places").insert(place).select().single();
+      if (error) throw error;
+      return data;
+    },
+    async remove(id) {
+      if (DEMO) {
+        ls.set(DEMO_KEY, JSON.stringify((await db.listPlaces("demo")).filter((p) => p.id !== id)));
+        return;
+      }
+      const { error } = await sb.from("places").delete().eq("id", id);
+      if (error) throw error;
+    },
+  };
+
+  // ══════════════════════════════════════════════════════════
+  // State
+  // ══════════════════════════════════════════════════════════
+  const emptyFilters = () => ({
+    area: "", text: "", day: null, time: "", meals: [], group: null, price: null, booking: "", alcohol: "",
+    delivery: false, takeaway: false, publicMin: null, oursMin: null, parkingMin: null, transportMin: null, includeUnknown: false,
+  });
+  const NUM_KEYS = new Set(["day", "group", "price", "publicMin", "oursMin", "parkingMin", "transportMin"]);
+  const state = {
+    user: null, workspaces: [], wsId: null, places: [], loading: true,
+    f: emptyFilters(), nowActive: false, sort: ls.get(SORT_KEY) || "best",
+    detailId: null, editingId: null,
+  };
+
+  // ══════════════════════════════════════════════════════════
+  // Toasts
+  // ══════════════════════════════════════════════════════════
+  let toastTimer;
+  function toast(message, action) {
+    const box = $("#toasts");
+    clearTimeout(toastTimer);
+    box.innerHTML = `<div class="toast"><span>${esc(message)}</span>${action ? `<button type="button" class="btn">${esc(action.label)}</button>` : ""}</div>`;
+    if (action) $("button", box).addEventListener("click", () => { box.innerHTML = ""; action.fn(); });
+    toastTimer = setTimeout(() => (box.innerHTML = ""), action ? 7000 : 3500);
+  }
+
+  // ══════════════════════════════════════════════════════════
+  // Auth
+  // ══════════════════════════════════════════════════════════
+  let authMode = "signin";
+  function setAuthMode(mode) {
+    authMode = mode;
+    const signin = mode === "signin";
+    $("#authTitle").textContent = signin ? "Welcome back" : "Create your account";
+    $("#authLead").textContent = signin ? "Sign in to see your saved places." : "It only takes a moment.";
+    $("#authSubmit").textContent = signin ? "Sign in" : "Create account";
+    $("#authSwitchText").textContent = signin ? "New here?" : "Already have an account?";
+    $("#authSwitch").textContent = signin ? "Create an account" : "Sign in instead";
+    $("#authPassword").autocomplete = signin ? "current-password" : "new-password";
+    $("#pwHelp").hidden = signin;
+    authMessage();
+  }
+  function authMessage(text, kind = "") {
+    const el = $("#authMsg");
+    el.hidden = !text;
+    el.className = "alert " + kind;
+    el.textContent = text || "";
+  }
+  $("#authSwitch").addEventListener("click", () => setAuthMode(authMode === "signin" ? "signup" : "signin"));
+  $("#pwToggle").addEventListener("click", (e) => {
+    const inp = $("#authPassword");
+    const show = inp.type === "password";
+    inp.type = show ? "text" : "password";
+    e.currentTarget.textContent = show ? "Hide" : "Show";
+    e.currentTarget.setAttribute("aria-pressed", String(show));
+  });
+  $("#authForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const email = $("#authEmail").value.trim();
+    const password = $("#authPassword").value;
+    if (!/^\S+@\S+\.\S+$/.test(email)) return authMessage("Please enter a valid email address.");
+    if (password.length < 8) return authMessage("Passwords need at least 8 characters.");
+    const btn = $("#authSubmit");
+    const label = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = authMode === "signin" ? "Signing in…" : "Creating account…";
+    try {
+      if (authMode === "signin") {
+        const { error } = await sb.auth.signInWithPassword({ email, password });
+        if (error) throw error;
+      } else {
+        const { data, error } = await sb.auth.signUp({ email, password, options: { emailRedirectTo: location.origin + location.pathname } });
+        if (error) throw error;
+        if (!data.session) {
+          setAuthMode("signin");
+          authMessage("Account created. Check your inbox for a confirmation link, then sign in.", "ok");
+        }
+      }
+    } catch (err) {
+      authMessage(/fetch/i.test(err.message) ? "Couldn't reach the server. Check your connection and the details in config.js." : err.message || String(err));
+    } finally {
+      btn.disabled = false;
+      if (btn.textContent.endsWith("…")) btn.textContent = label;
+    }
+  });
+  $("#googleBtn").addEventListener("click", async (e) => {
+    const btn = e.currentTarget;
+    btn.disabled = true;
+    authMessage();
+    const { error } = await sb.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: location.origin + location.pathname },
+    });
+    // On success the browser leaves for Google, so we only get here on failure.
+    if (error) { authMessage(error.message || String(error)); btn.disabled = false; }
+  });
+  // Errors from the Google round-trip come back in the URL (?error_description=… or #error_description=…).
+  {
+    const params = new URLSearchParams(location.search + "&" + location.hash.replace(/^#/, ""));
+    const oauthError = params.get("error_description");
+    if (oauthError) {
+      setTimeout(() => authMessage(`Google sign-in didn't complete: ${oauthError}`), 0);
+      history.replaceState(null, "", location.pathname);
+    }
+  }
+  $("#signOutBtn").addEventListener("click", async () => { $("#userMenu").open = false; await sb.auth.signOut(); });
+
+  async function onSession(session) {
+    state.user = session?.user || null;
+    $("#userMenu").hidden = !state.user;
+    if (state.user) {
+      $("#userEmail").textContent = state.user.email;
+      $("#userInitial").textContent = (state.user.email || "?")[0].toUpperCase();
+      $("#signOutBtn").hidden = false;
+    }
+    $("#authView").hidden = !!state.user;
+    $("#appView").hidden = !state.user;
+    $("#fab").hidden = !state.user;
+    $("#wsWrap").hidden = true;
+    if (state.user) await loadWorkspaces();
+  }
+
+  document.addEventListener("click", (e) => { const m = $("#userMenu"); if (m.open && !m.contains(e.target)) m.open = false; });
+
+  // ══════════════════════════════════════════════════════════
+  // Loading
+  // ══════════════════════════════════════════════════════════
+  async function loadWorkspaces() {
+    try {
+      state.workspaces = await db.listWorkspaces();
+    } catch (err) {
+      return listError("We couldn't load your lists", err.message || String(err));
+    }
+    if (!state.workspaces.length) {
+      return listError("No list found for this account", "Has supabase/schema.sql been run? It creates a list for every new user.");
+    }
+    const remembered = ls.get(WS_KEY);
+    state.wsId = state.workspaces.some((w) => w.id === remembered) ? remembered : state.workspaces[0].id;
+    $("#wsSelect").innerHTML = state.workspaces.map((w) => `<option value="${esc(w.id)}">${esc(w.name)}</option>`).join("");
+    $("#wsSelect").value = state.wsId;
+    $("#wsWrap").hidden = state.workspaces.length < 2;
+    await loadPlaces();
+  }
+  $("#wsSelect").addEventListener("change", async (e) => {
+    state.wsId = e.target.value;
+    ls.set(WS_KEY, state.wsId);
+    await loadPlaces();
+  });
+
+  async function loadPlaces() {
+    state.loading = true;
+    render();
+    try {
+      state.places = await db.listPlaces(state.wsId);
+    } catch (err) {
+      state.loading = false;
+      return listError("We couldn't load your places", err.message || String(err));
+    }
+    state.loading = false;
+    refreshSuggestions();
+    render();
+  }
+  function listError(title, detail) {
+    $("#resultsMeta").textContent = "";
+    $("#list").innerHTML = `<div class="empty"><div class="empty-art">${ic("x", "ic-lg")}</div><h3>${esc(title)}</h3><p>${esc(detail)}</p>
+      <div class="actions"><button class="btn btn-outline" type="button" onclick="location.reload()">Try again</button></div></div>`;
+  }
+  function refreshSuggestions() {
+    const areas = new Set(), tags = new Set();
+    for (const p of state.places) {
+      if (p.suburb && p.postcode) areas.add(`${p.suburb} ${p.postcode}`);
+      if (p.suburb) areas.add(p.suburb);
+      if (p.postcode) areas.add(p.postcode);
+      (p.tags || []).forEach((t) => tags.add(t));
+    }
+    const opts = (set) => [...set].sort((a, b) => a.localeCompare(b)).map((v) => `<option value="${esc(v)}">`).join("");
+    $("#areaOptions").innerHTML = opts(areas);
+    $("#tagOptions").innerHTML = opts(tags);
+  }
+
+  // ══════════════════════════════════════════════════════════
+  // Filtering
+  // ══════════════════════════════════════════════════════════
+  function areaScore(p, q) {
+    const nq = norm(q);
+    if (!nq) return 1;
+    const pc = norm(p.postcode), sub = norm(p.suburb), st = norm(p.street);
+    if (/^\d{3,4}$/.test(nq)) return pc.startsWith(nq) ? (pc === nq ? 4 : 3) : 0;
+    if (sub && sub === nq) return 4;
+    if (sub && sub.startsWith(nq)) return 3;
+    if (st && st.includes(nq)) return 2.5;
+    const full = norm([p.street, p.suburb, p.state, p.postcode].filter(Boolean).join(" "));
+    if (full && nq.split(" ").every((t) => full.includes(t))) return 2;
+    return 0;
+  }
+  function textMatch(p, q) {
+    const nq = norm(q);
+    if (!nq) return true;
+    const hay = norm([p.name, CATEGORY[p.category], (p.tags || []).join(" "), p.notes, p.booking_notes, p.parking_notes, p.transport_notes, p.hours_note].join(" "));
+    return nq.split(" ").every((t) => hay.includes(t));
+  }
+  function bookingKind(p) {
+    if (p.booking_method && p.booking_method !== "unknown") return p.booking_method;
+    return p.phone ? "phone" : "unknown";
+  }
+  function mealCheck(p, wanted) {
+    if (foodOf(p) === "none") return false;
+    const meals = p.meals || [];
+    if (!meals.length) return null;
+    return wanted.every((m) => meals.includes(m));
+  }
+  function alcoholCheck(p, want) {
+    const a = p.alcohol;
+    if (!a) return null;
+    if (want === "licensed") return a === "licensed" || a === "licensed_byo";
+    if (want === "byo") return a === "byo" || a === "licensed_byo";
+    if (want === "any") return a !== "none";
+    return a === "none";
+  }
+  // Each check: true (pass), false (fail), null (unknown → passes only with includeUnknown).
+  function evaluate(p, f) {
+    const score = areaScore(p, f.area);
+    if (!score || !textMatch(p, f.text)) return null;
+    const checks = [];
+    if (f.day !== null) checks.push(f.time ? isOpenAt(p, f.day, toMin(f.time)) : isOpenOnDay(p, f.day));
+    else if (f.time) checks.push(isOpenAt(p, todayIdx(), toMin(f.time)));
+    if (f.meals.length) checks.push(mealCheck(p, f.meals));
+    if (f.group) checks.push(p.max_group_size == null ? null : p.max_group_size >= f.group);
+    if (f.price) checks.push(p.price_level == null ? null : p.price_level <= f.price);
+    if (f.booking) {
+      const b = bookingKind(p);
+      checks.push(b === "unknown" ? null : f.booking === "bookable" ? b === "online" || b === "phone" : b === f.booking);
+    }
+    if (f.alcohol) checks.push(alcoholCheck(p, f.alcohol));
+    if (f.delivery) checks.push(p.delivery == null ? null : !!p.delivery);
+    if (f.takeaway) checks.push(p.takeaway == null ? null : !!p.takeaway);
+    if (f.publicMin) checks.push(p.public_rating == null ? null : Number(p.public_rating) >= f.publicMin);
+    if (f.oursMin) checks.push(p.our_rating == null ? null : p.our_rating >= f.oursMin);
+    if (f.parkingMin) checks.push(p.parking_ease == null ? null : p.parking_ease >= f.parkingMin);
+    if (f.transportMin) checks.push(p.transport_ease == null ? null : p.transport_ease >= f.transportMin);
+    if (checks.includes(false)) return null;
+    const unknowns = checks.filter((c) => c === null).length;
+    if (unknowns && !f.includeUnknown) return null;
+    return { score, unknowns };
+  }
+  function results() {
+    const rows = [];
+    for (const p of state.places) { const r = evaluate(p, state.f); if (r) rows.push({ p, ...r }); }
+    const byName = (a, b) => a.p.name.localeCompare(b.p.name);
+    const cmp = {
+      best: (a, b) => b.score - a.score || a.unknowns - b.unknowns || (b.p.our_rating || 0) - (a.p.our_rating || 0) || byName(a, b),
+      ours: (a, b) => (b.p.our_rating || 0) - (a.p.our_rating || 0) || byName(a, b),
+      public: (a, b) => (Number(b.p.public_rating) || 0) - (Number(a.p.public_rating) || 0) || byName(a, b),
+      name: byName,
+      newest: (a, b) => String(b.p.created_at).localeCompare(String(a.p.created_at)),
+    }[state.sort] || byName;
+    return rows.sort(cmp);
+  }
+
+  function activeFilters() {
+    const f = state.f, out = [];
+    if (f.area.trim()) out.push({ label: `Near ${f.area.trim()}`, clear: () => (f.area = "") });
+    if (f.day !== null || f.time) {
+      const label = state.nowActive ? "Open now" : `${f.day !== null ? DAY_FULL[f.day] : "Today"}${f.time ? " at " + fmtTime(f.time) : ""}`;
+      out.push({ label, clear: () => { f.day = null; f.time = ""; state.nowActive = false; } });
+    }
+    if (f.group) out.push({ label: plural(f.group, "guest"), clear: () => (f.group = null) });
+    f.meals.forEach((m) => out.push({ label: cap(m), clear: () => (f.meals = f.meals.filter((x) => x !== m)) }));
+    if (f.alcohol) out.push({ label: ALCOHOL_FILTER[f.alcohol], clear: () => (f.alcohol = "") });
+    if (f.price) out.push({ label: `Up to ${"$".repeat(f.price)}`, clear: () => (f.price = null) });
+    if (f.booking) out.push({ label: BOOKING_FILTER[f.booking], clear: () => (f.booking = "") });
+    if (f.delivery) out.push({ label: "Delivery", clear: () => (f.delivery = false) });
+    if (f.takeaway) out.push({ label: "Takeaway", clear: () => (f.takeaway = false) });
+    if (f.parkingMin) out.push({ label: f.parkingMin === 3 ? "Easy parking" : "Parking OK or easy", clear: () => (f.parkingMin = null) });
+    if (f.transportMin) out.push({ label: f.transportMin === 3 ? "Easy public transport" : "Public transport OK or easy", clear: () => (f.transportMin = null) });
+    if (f.publicMin) out.push({ label: `Rated ${f.publicMin}+`, clear: () => (f.publicMin = null) });
+    if (f.oursMin) out.push({ label: f.oursMin === 5 ? "Our favourites" : `Our rating ${f.oursMin}+`, clear: () => (f.oursMin = null) });
+    if (f.text.trim()) out.push({ label: `“${f.text.trim()}”`, clear: () => (f.text = "") });
+    if (f.includeUnknown) out.push({ label: "Including incomplete", clear: () => (f.includeUnknown = false) });
+    return out;
+  }
+  const sheetFilterCount = () => {
+    const f = state.f;
+    return [f.meals.length, f.alcohol, f.price, f.booking, f.delivery, f.takeaway, f.parkingMin, f.transportMin, f.publicMin, f.oursMin, f.includeUnknown].filter(Boolean).length;
+  };
+
+  // ── Controls ↔ state ──
+  function onControl(e) {
+    const el = e.target.closest?.("[data-f]");
+    if (!el) return;
+    const k = el.dataset.f;
+    if (k === "meals") {
+      const set = new Set(state.f.meals);
+      el.checked ? set.add(el.value) : set.delete(el.value);
+      state.f.meals = MEALS.filter((m) => set.has(m));
+    } else if (el.type === "checkbox") state.f[k] = el.checked;
+    else if (el.type === "radio") { if (!el.checked) return; state.f[k] = NUM_KEYS.has(k) ? numOrNull(el.value) : el.value; }
+    else state.f[k] = NUM_KEYS.has(k) ? numOrNull(el.value) : el.value;
+    if (k === "day" || k === "time") state.nowActive = false;
+    update(el);
+  }
+  document.addEventListener("input", onControl);
+  document.addEventListener("change", onControl);
+
+  function syncControls(except) {
+    const f = state.f;
+    for (const el of $$("[data-f]")) {
+      if (el === except) continue;
+      const k = el.dataset.f, v = f[k];
+      if (k === "meals") el.checked = f.meals.includes(el.value);
+      else if (el.type === "checkbox") el.checked = !!v;
+      else if (el.type === "radio") el.checked = String(v ?? "") === el.value;
+      else { const s = v == null ? "" : String(v); if (el.value !== s) el.value = s; }
+    }
+    const pressed = { now: state.nowActive, parking: f.parkingMin === 3, book: f.booking === "bookable", drinks: f.alcohol === "any" };
+    for (const b of $$("[data-quick]")) {
+      const q = b.dataset.quick;
+      b.setAttribute("aria-pressed", String(q.startsWith("meal:") ? f.meals.includes(q.slice(5)) : !!pressed[q]));
+    }
+    $("#clearArea").hidden = !f.area;
+    const n = sheetFilterCount();
+    $("#moreCount").hidden = !n;
+    $("#moreCount").textContent = n;
+  }
+  function update(except) { syncControls(except); render(); }
+
+  $("#quick").addEventListener("click", (e) => {
+    const b = e.target.closest("[data-quick]");
+    if (!b) return;
+    const f = state.f, q = b.dataset.quick;
+    if (q === "now") {
+      if (state.nowActive) { f.day = null; f.time = ""; state.nowActive = false; }
+      else { f.day = todayIdx(); f.time = nowHHMM(); state.nowActive = true; }
+    } else if (q.startsWith("meal:")) {
+      const m = q.slice(5);
+      f.meals = f.meals.includes(m) ? f.meals.filter((x) => x !== m) : MEALS.filter((x) => x === m || f.meals.includes(x));
+    } else if (q === "parking") f.parkingMin = f.parkingMin === 3 ? null : 3;
+    else if (q === "book") f.booking = f.booking === "bookable" ? "" : "bookable";
+    else if (q === "drinks") f.alcohol = f.alcohol === "any" ? "" : "any";
+    update();
+  });
+  $$("[data-step]").forEach((b) => b.addEventListener("click", () => {
+    const step = Number(b.dataset.step), cur = state.f.group;
+    const next = cur == null ? (step > 0 ? 2 : null) : cur + step;
+    state.f.group = next == null || next < 1 ? null : Math.min(next, 99);
+    update();
+  }));
+  $("#clearArea").addEventListener("click", () => { state.f.area = ""; update(); $("#fArea").focus(); });
+  $("#sortBy").value = state.sort;
+  $("#sortBy").addEventListener("change", (e) => { state.sort = e.target.value; ls.set(SORT_KEY, state.sort); render(); });
+  function clearAllFilters() { state.f = emptyFilters(); state.nowActive = false; update(); }
+  $("#clearFiltersBtn").addEventListener("click", clearAllFilters);
+  $("#activeChips").addEventListener("click", (e) => {
+    if (e.target.closest("[data-clear-all]")) return clearAllFilters();
+    const i = e.target.closest("[data-chip]")?.dataset.chip;
+    if (i == null) return;
+    activeFilters()[Number(i)].clear();
+    update();
+  });
+
+  // ══════════════════════════════════════════════════════════
+  // Rendering
+  // ══════════════════════════════════════════════════════════
+  // Status for the chosen moment (or right now), always with the closing time when open.
+  function status(p) {
+    const f = state.f;
+    if (!hasHours(p)) return { cls: "unknown", text: "Hours not added" };
+    const filtered = f.day !== null || f.time;
+    const day = f.day ?? todayIdx();
+    if (filtered && !f.time) {
+      const spans = p.hours[DAYS[day]] || [];
+      return spans.length
+        ? { cls: "open", text: `Open ${DAY_FULL[day]} · ${fmtSpans(spans)}` }
+        : { cls: "closed", text: `Closed ${DAY_FULL[day]}` };
+    }
+    const mins = filtered ? toMin(f.time) : new Date().getHours() * 60 + new Date().getMinutes();
+    const when = !filtered || state.nowActive ? "now" : `${f.day !== null ? DAY_FULL[day] : "today"} at ${fmtTime(f.time)}`;
+    const span = coveringSpan(p, day, mins);
+    if (span) {
+      const kitchen = kitchenOpen(p, span);
+      if (kitchen === false) return { cls: "warn", text: `Open ${when} · until ${fmtTime(span.c)} · kitchen closed` };
+      const kc = kitchen ? ` · kitchen until ${fmtTime(p.kitchen_closes)}` : "";
+      return { cls: "open", text: `Open ${when} · until ${fmtTime(span.c)}${kc}` };
+    }
+    const next = (p.hours[DAYS[day]] || []).map(([o]) => o).filter((o) => toMin(o) > mins).sort()[0];
+    if (next) return { cls: "closed", text: `Closed ${when} · opens ${fmtTime(next)}` };
+    return { cls: "closed", text: filtered && !state.nowActive ? `Closed ${when}` : "Closed today" };
+  }
+  function priceHTML(level) {
+    if (!level) return "";
+    return `<span class="price" aria-label="Price level ${level} of 4">${"$".repeat(level)}<span class="dim">${"$".repeat(4 - level)}</span></span>`;
+  }
+  function bookingAction(p) {
+    const online = safeUrl(p.booking_url) || safeUrl(p.website);
+    switch (p.booking_method) {
+      case "online":
+        return online
+          ? `<a class="btn btn-soft btn-sm" href="${esc(online)}" target="_blank" rel="noopener">${ic("calendar")}Book online</a>`
+          : `<span class="pill ok">${ic("calendar")}Online bookings</span>`;
+      case "phone":
+        return p.phone
+          ? `<a class="btn btn-soft btn-sm" href="${esc(telHref(p.phone))}">${ic("phone")}Call to book</a>`
+          : `<span class="pill">${ic("phone")}Phone bookings</span>`;
+      case "walk_in":
+        return `<span class="pill warn">Walk-in only</span>`;
+      default:
+        return p.phone
+          ? `<a class="btn btn-outline btn-sm" href="${esc(telHref(p.phone))}" title="No online booking recorded">${ic("phone")}No online booking · Call</a>`
+          : `<span class="muted-note">Booking info not added</span>`;
+    }
+  }
+  function foodPills(p) {
+    const food = foodOf(p);
+    if (food === "none") return [`<span class="pill">Drinks only</span>`];
+    return (p.meals || []).map((m) => `<span class="pill meal">${cap(m)}</span>`);
+  }
+  function cardHTML(p) {
+    const st = status(p);
+    const sub = [CATEGORY[p.category], [p.suburb, p.postcode].filter(Boolean).join(" ")].filter(Boolean).join(" · ");
+    const facts = [];
+    const easeCls = (v) => (v === 3 ? "good" : v === 1 ? "bad" : "");
+    if (p.max_group_size) facts.push(`<li>${ic("users")}Up to ${esc(p.max_group_size)}</li>`);
+    if (p.parking_ease) facts.push(`<li class="${easeCls(p.parking_ease)}">${ic("parking")}${EASE[p.parking_ease]} parking</li>`);
+    if (p.transport_ease) facts.push(`<li class="${easeCls(p.transport_ease)}">${ic("train")}${p.transport_ease === 3 ? "Easy by PT" : p.transport_ease === 2 ? "PT OK" : "Hard by PT"}</li>`);
+    if (p.alcohol) facts.push(`<li>${ic("wine")}${ALCOHOL[p.alcohol]}</li>`);
+    if (p.public_rating != null) facts.push(`<li>${ic("star")}${esc(Number(p.public_rating).toFixed(1))}</li>`);
+    if (p.delivery) facts.push(`<li>${ic("bike")}Delivery</li>`);
+    if (p.takeaway) facts.push(`<li>${ic("bag")}Takeaway</li>`);
+    const pills = foodPills(p).concat((p.tags || []).slice(0, 4).map((t) => `<span class="pill tag">${esc(t)}</span>`));
+    return `
+      <article class="card">
+        ${avatar(p.name)}
+        <div class="card-main">
+          <div class="card-title">
+            <h3><button class="stretch" type="button" data-open="${esc(p.id)}">${esc(p.name)}</button></h3>
+            ${sub ? `<p class="card-sub">${esc(sub)}</p>` : ""}
+          </div>
+          <div class="status-line"><span class="status ${st.cls}">${esc(st.text)}</span>${priceHTML(p.price_level)}</div>
+          ${facts.length ? `<ul class="facts">${facts.join("")}</ul>` : ""}
+          ${pills.length ? `<div class="pills">${pills.join("")}</div>` : ""}
+        </div>
+        <div class="card-side">
+          <span class="fav" title="Our rating">${p.our_rating ? `${ic("heart", "ic-fill")}${esc(p.our_rating)}` : ""}</span>
+          <div class="card-cta">
+            ${bookingAction(p)}
+            <button type="button" class="card-more" data-open="${esc(p.id)}" aria-label="Details for ${esc(p.name)}">Details →</button>
+          </div>
+        </div>
+      </article>`;
+  }
+  function emptyHTML(kind) {
+    if (kind === "none") {
+      return `<div class="empty"><div class="empty-art">${ic("utensils", "ic-lg")}</div>
+        <h3>Your list is empty</h3>
+        <p>Save the cafés, bars and restaurants you love, with the details that matter: hours, group size, parking and how to book.</p>
+        <div class="actions"><button class="btn btn-primary" type="button" data-add>${ic("plus")}Add your first place</button></div></div>`;
+    }
+    const canInclude = !state.f.includeUnknown && state.places.some((p) => evaluate(p, { ...state.f, includeUnknown: true }));
+    return `<div class="empty"><div class="empty-art">${ic("search", "ic-lg")}</div>
+      <h3>No saved places match</h3>
+      <p>Try a nearby suburb, remove a filter, or include places that are missing some details.</p>
+      <div class="actions">
+        ${canInclude ? `<button class="btn btn-soft" type="button" data-include-unknown>Include incomplete entries</button>` : ""}
+        <button class="btn btn-outline" type="button" data-clear-all>Clear all filters</button>
+      </div></div>`;
+  }
+  function render() {
+    if (state.loading) {
+      $("#resultsMeta").textContent = "Loading your places…";
+      $("#list").innerHTML = '<div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div>';
+      $("#list").setAttribute("aria-busy", "true");
+      return;
+    }
+    $("#list").setAttribute("aria-busy", "false");
+    const rows = results();
+    const total = state.places.length;
+    const filters = activeFilters();
+    $("#resultsTitle").textContent = filters.length ? "Places that fit" : "Your places";
+    $("#resultsMeta").textContent = !total ? "Nothing saved yet"
+      : filters.length ? `${rows.length} of ${plural(total, "saved place")}` : plural(total, "saved place");
+    $("#activeChips").innerHTML = filters.length
+      ? filters.map((c, i) => `<button type="button" class="active-chip" data-chip="${i}" aria-label="Remove filter: ${esc(c.label)}">${esc(c.label)}${ic("x")}</button>`).join("")
+        + `<button type="button" class="link-btn clear-all" data-clear-all>Clear all</button>`
+      : "";
+    $("#showResultsBtn").textContent = rows.length ? `Show ${plural(rows.length, "place")}` : "No matches";
+    $("#list").innerHTML = !total ? emptyHTML("none") : !rows.length ? emptyHTML("nomatch") : rows.map((r) => cardHTML(r.p)).join("");
+  }
+
+  $("#list").addEventListener("click", (e) => {
+    const open = e.target.closest("[data-open]");
+    if (open) return openDetail(open.dataset.open);
+    if (e.target.closest("[data-add]")) return openEditor(null);
+    if (e.target.closest("[data-clear-all]")) return clearAllFilters();
+    if (e.target.closest("[data-include-unknown]")) { state.f.includeUnknown = true; update(); }
+  });
+
+  // ══════════════════════════════════════════════════════════
+  // Sheets: shared behaviour
+  // ══════════════════════════════════════════════════════════
+  for (const dlg of $$("dialog.sheet")) {
+    dlg.addEventListener("click", (e) => {
+      if (e.target !== dlg) return; // backdrop click
+      dlg.id === "editDlg" ? requestCloseEditor() : dlg.close();
+    });
+    $$("[data-close]", dlg).forEach((b) => b.addEventListener("click", () => dlg.close()));
+  }
+  $("#moreFiltersBtn").addEventListener("click", () => $("#filtersDlg").showModal());
+
+  // ══════════════════════════════════════════════════════════
+  // Detail sheet
+  // ══════════════════════════════════════════════════════════
+  function openDetail(id) {
+    const p = state.places.find((x) => x.id === id);
+    if (!p) return;
+    state.detailId = id;
+    const st = status(p);
+    const address = [p.street, [p.suburb, p.state, p.postcode].filter(Boolean).join(" ")].filter(Boolean).join(", ");
+    const site = safeUrl(p.website);
+    const online = safeUrl(p.booking_url) || site;
+    const sub = [CATEGORY[p.category], address].filter(Boolean).join(" · ");
+
+    $("#detailHead").innerHTML = `
+      <div class="detail-head">${avatar(p.name)}
+        <div><h2 id="detailTitle">${esc(p.name)}</h2>${sub ? `<p class="card-sub">${esc(sub)}</p>` : ""}
+          <p style="margin-top:10px"><span class="status ${st.cls}">${esc(st.text)}</span></p></div>
+      </div>`;
+
+    const actions = [];
+    if (p.booking_method === "online" && online) actions.push(`<a class="btn btn-primary btn-sm" href="${esc(online)}" target="_blank" rel="noopener">${ic("calendar")}Book online</a>`);
+    if (p.phone) actions.push(`<a class="btn ${p.booking_method === "online" ? "btn-outline" : "btn-primary"} btn-sm" href="${esc(telHref(p.phone))}">${ic("phone")}${p.booking_method === "phone" || p.booking_method === "unknown" ? "Call to book" : "Call"}</a>`);
+    if (site) actions.push(`<a class="btn btn-outline btn-sm" href="${esc(site)}" target="_blank" rel="noopener">${ic("globe")}Website</a>`);
+    if (address) actions.push(`<a class="btn btn-outline btn-sm" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.name + ", " + address)}" target="_blank" rel="noopener">${ic("nav")}Directions</a>`);
+
+    const tile = (label, value) => `<div class="tile"><small>${label}</small><strong>${value || '<span class="none">Not added</span>'}</strong></div>`;
+    const bookingText = { online: "Online", phone: p.phone ? `By phone · ${esc(p.phone)}` : "By phone", walk_in: "Walk-in only" }[p.booking_method]
+      || (p.phone ? `No online booking · ${esc(p.phone)}` : "");
+    const yesNo = (v) => (v == null ? "" : v ? "Yes" : "No");
+    const food = foodOf(p);
+    const foodText = food === "none" ? "Drinks only" : food === "snacks" ? "Snacks" : (p.meals || []).length ? cap(listText(p.meals)) : "";
+
+    const today = todayIdx();
+    const hoursHTML = hasHours(p)
+      ? `<table class="hours-table"><tbody>${DAYS.map((d, i) => `<tr class="${i === today ? "today" : ""}"><td>${DAY_FULL[i]}${i === today ? " (today)" : ""}</td><td>${(p.hours[d] || []).length ? esc(fmtSpans(p.hours[d])) : "Closed"}</td></tr>`).join("")}</tbody></table>`
+      : `<p class="help" style="margin-top:8px">Opening hours haven't been added yet.</p>`;
+    const kitchenHTML = p.kitchen_closes ? `<p class="kitchen-line">${ic("chef")}Kitchen closes ${esc(fmtTime(p.kitchen_closes))}</p>` : "";
+    const hoursNote = p.hours_note ? `<div class="note-block">${esc(p.hours_note)}</div>` : "";
+
+    const notes = [["Booking notes", p.booking_notes], ["Parking", p.parking_notes], ["Public transport", p.transport_notes], ["Notes", p.notes]].filter(([, v]) => v);
+    $("#detailBody").innerHTML = `
+      ${actions.length ? `<div class="detail-actions">${actions.join("")}</div>` : ""}
+      <section class="dsec" style="border-top:0">
+        <h3>At a glance</h3>
+        <div class="glance">
+          ${tile("Food", foodText)}
+          ${tile("Drinks", p.alcohol ? ALCOHOL[p.alcohol] : "")}
+          ${tile("Price", p.price_level ? "$".repeat(p.price_level) : "")}
+          ${tile("Groups", p.max_group_size ? `Up to ${esc(p.max_group_size)}` : "")}
+          ${tile("Booking", bookingText)}
+          ${tile("Parking", p.parking_ease ? EASE[p.parking_ease] : "")}
+          ${tile("Public transport", p.transport_ease ? EASE[p.transport_ease] : "")}
+          ${tile("Public rating", p.public_rating != null ? `★ ${esc(Number(p.public_rating).toFixed(1))}` : "")}
+          ${tile("Our rating", p.our_rating ? `♥ ${esc(p.our_rating)} / 5` : "")}
+          ${tile("Delivery", yesNo(p.delivery))}
+          ${tile("Takeaway", yesNo(p.takeaway))}
+        </div>
+      </section>
+      <section class="dsec"><h3>Opening hours</h3>${hoursHTML}${kitchenHTML}${hoursNote}</section>
+      ${notes.map(([k, v]) => `<section class="dsec"><h3>${k}</h3><div class="note-block">${esc(v)}</div></section>`).join("")}
+      ${(p.tags || []).length ? `<section class="dsec"><h3>Tags</h3><div class="pills" style="margin-top:12px">${p.tags.map((t) => `<span class="pill tag">${esc(t)}</span>`).join("")}</div></section>` : ""}`;
+    $("#detailFootNote").textContent = p.created_at ? `Saved ${new Date(p.created_at).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" })}` : "";
+    const dlg = $("#detailDlg");
+    if (!dlg.open) dlg.showModal();
+    $(".sheet-body", dlg).scrollTop = 0;
+  }
+  $("#detailEditBtn").addEventListener("click", () => {
+    const p = state.places.find((x) => x.id === state.detailId);
+    $("#detailDlg").close();
+    if (p) openEditor(p);
+  });
+
+  // ══════════════════════════════════════════════════════════
+  // Editor sheet
+  // ══════════════════════════════════════════════════════════
+  const editDlg = $("#editDlg");
+  const form = $("#editForm");
+  let editorTags = [];
+  let editorSnapshot = "";
+  let mealsAuto = true;
+  let foodTouched = false;
+
+  // Time pickers: 15-minute steps, ordered from a sensible starting hour.
+  function timeOptions(startHour, selected, placeholder) {
+    const opts = [`<option value="">${placeholder}</option>`];
+    let found = !selected;
+    for (let i = 0; i < 96; i++) {
+      const v = fromMin((startHour * 60 + i * 15) % 1440);
+      if (v === selected) found = true;
+      opts.push(`<option value="${v}"${v === selected ? " selected" : ""}>${pickLabel(v)}</option>`);
+    }
+    if (!found) opts.splice(1, 0, `<option value="${selected}" selected>${pickLabel(selected)}</option>`);
+    return opts.join("");
+  }
+  const spanRowHTML = (d, i, o = "", c = "") => `
+    <div class="span-row">
+      <select class="select" data-role="open" aria-label="${DAY_FULL[i]} opens">${timeOptions(5, o, "Opens")}</select>
+      <span class="to">to</span>
+      <select class="select" data-role="close" aria-label="${DAY_FULL[i]} closes">${timeOptions(10, c, "Closes")}</select>
+      <button type="button" class="icon-btn sm" data-remove-span aria-label="Remove these hours">${ic("x")}</button>
+    </div>`;
+  $("#days").innerHTML = DAYS.map((d, i) => `
+    <div class="day-row" data-day="${d}">
+      <div class="day-head">
+        <input type="checkbox" class="switch" data-day-open="${d}" aria-label="Open on ${DAY_FULL[i]}">
+        <span class="day-name">${DAY_SHORT[i]}</span>
+      </div>
+      <div class="day-body" data-day-body="${d}">
+        <span class="closed-text">Closed</span>
+        <button type="button" class="link-btn add-span" data-add-span="${d}">+ Add another session</button>
+      </div>
+    </div>`).join("");
+  $("#eKitchen").innerHTML = timeOptions(14, "", "Same as closing");
+
+  const dayIdx = (d) => DAYS.indexOf(d);
+  const dayRow = (d) => $(`.day-row[data-day="${d}"]`);
+  function setDay(d, open, spans) {
+    const row = dayRow(d), body = $(`[data-day-body="${d}"]`);
+    $(`[data-day-open="${d}"]`).checked = open;
+    row.classList.toggle("closed", !open);
+    $$(".span-row", body).forEach((r) => r.remove());
+    const list = spans && spans.length ? spans : [["", ""]];
+    const addBtn = $(".add-span", body);
+    for (const [o, c] of list) addBtn.insertAdjacentHTML("beforebegin", spanRowHTML(d, dayIdx(d), o, c));
+    body.classList.toggle("multi", list.length > 1);
+  }
+  function readDay(d) {
+    const open = $(`[data-day-open="${d}"]`).checked;
+    const spans = $$(`[data-day-body="${d}"] .span-row`).map((r) => [$("[data-role=open]", r).value, $("[data-role=close]", r).value]);
+    return { open, spans };
+  }
+  const radio = (name) => form.elements[name].value;
+  function setRadio(name, v) { for (const r of form.querySelectorAll(`input[type=radio][name="${name}"]`)) r.checked = r.value === String(v ?? ""); }
+
+  // Read the hours editor. Returns the hours object and any problems found.
+  function readHours() {
+    const problems = [];
+    if (radio("hoursMode") !== "set") return { hours: {}, problems };
+    let hours = {};
+    DAYS.forEach((d, i) => {
+      const { open, spans } = readDay(d);
+      if (!open) { hours[d] = []; return; }
+      const good = [];
+      $$(`[data-day-body="${d}"] .span-row`).forEach((row, j) => {
+        const [o, c] = spans[j];
+        if (!o || !c) problems.push({ el: !o ? $("[data-role=open]", row) : $("[data-role=close]", row), msg: `${DAY_FULL[i]}: choose an opening and a closing time.` });
+        else if (o === c) problems.push({ el: $("[data-role=close]", row), msg: `${DAY_FULL[i]}: opening and closing times are the same.` });
+        else good.push([o, c]);
+      });
+      hours[d] = good.sort((a, b) => toMin(a[0]) - toMin(b[0]));
+    });
+    if (!DAYS.some((d) => hours[d].length)) hours = {};
+    return { hours, problems };
+  }
+
+  // ── Meals: automatic from hours unless overridden ──
+  const periodBoxes = () => $$('input[name="meals"]', form);
+  function applyAutoMeals() {
+    if (!mealsAuto) return;
+    const derived = deriveMeals(readHours().hours, form.elements.kitchen_closes.value || null);
+    periodBoxes().forEach((c) => (c.checked = derived.includes(c.value)));
+  }
+  function refreshFoodUI() {
+    const food = radio("food");
+    const isBar = radio("category") === "bar";
+    $("#mealsField").hidden = food !== "meals";
+    $("#foodHint").textContent = food === "none"
+      ? (isBar ? "Bars start as drinks only. Choose Meals or Snacks if they serve food." : "This place won't appear for meal filters.")
+      : food === "snacks" ? "Shown as “Snacks”. It won't match breakfast, lunch or dinner filters." : "";
+    $("#mealChips").classList.toggle("auto", mealsAuto);
+    const hoursKnown = Object.keys(readHours().hours).length > 0;
+    $("#mealsBadge").innerHTML = mealsAuto
+      ? `<span class="auto-badge">${ic("sparkle")}Automatic</span>`
+      : `<span class="auto-badge manual">Set by you</span>`;
+    $("#mealsHelp").innerHTML = mealsAuto
+      ? (hoursKnown ? "Worked out from the opening hours and kitchen time. Tap a meal to change it." : "Add opening hours above and these fill in automatically, or tap to choose.")
+      : `You've chosen these. <button type="button" class="link-btn" id="resetMeals">Use opening hours instead</button>`;
+  }
+  function onHoursChanged() { applyAutoMeals(); refreshFoodUI(); }
+
+  form.addEventListener("change", (e) => {
+    const t = e.target;
+    if (t.name === "hoursMode") { $("#hoursEditor").hidden = radio("hoursMode") !== "set"; onHoursChanged(); }
+    else if (t.dataset.dayOpen) {
+      const d = t.dataset.dayOpen;
+      const cur = readDay(d);
+      setDay(d, t.checked, cur.spans.filter(([o, c]) => o || c));
+      onHoursChanged();
+    } else if (t.closest("#days") || t.name === "kitchen_closes") { t.removeAttribute("aria-invalid"); onHoursChanged(); }
+    else if (t.name === "meals") { mealsAuto = false; refreshFoodUI(); }
+    else if (t.name === "food") { foodTouched = true; refreshFoodUI(); }
+    else if (t.name === "category") {
+      const isBar = t.value === "bar";
+      if (!foodTouched) setRadio("food", isBar ? "none" : "meals");
+      if (isBar && !radio("alcohol")) setRadio("alcohol", "licensed");
+      refreshFoodUI();
+    } else if (t.name === "booking_method") toggleBooking();
+  });
+  $("#mealsField").addEventListener("click", (e) => {
+    if (e.target.id !== "resetMeals") return;
+    mealsAuto = true;
+    applyAutoMeals();
+    refreshFoodUI();
+  });
+  $("#days").addEventListener("click", (e) => {
+    const add = e.target.closest("[data-add-span]");
+    if (add) {
+      const d = add.dataset.addSpan;
+      setDay(d, true, [...readDay(d).spans, ["", ""]]);
+      $$(`[data-day-body="${d}"] .span-row`).pop().querySelector("select").focus();
+      return;
+    }
+    const rm = e.target.closest("[data-remove-span]");
+    if (rm) {
+      const row = rm.closest(".span-row"), d = row.closest(".day-row").dataset.day;
+      const rows = $$(`[data-day-body="${d}"] .span-row`);
+      setDay(d, true, readDay(d).spans.filter((_, j) => rows[j] !== row));
+      onHoursChanged();
+    }
+  });
+  $("#presets").addEventListener("click", (e) => {
+    const b = e.target.closest("[data-preset]");
+    if (!b) return;
+    const spans = b.dataset.preset.split(",").map((s) => s.split("-"));
+    const openDays = DAYS.filter((d) => $(`[data-day-open="${d}"]`).checked);
+    for (const d of openDays.length ? openDays : DAYS) setDay(d, true, spans);
+    onHoursChanged();
+    toast(`Applied ${b.querySelector("strong").textContent.toLowerCase()} to ${openDays.length && openDays.length < 7 ? plural(openDays.length, "day") : "every day"}`);
+  });
+  function copyMonday(days) {
+    const mon = readDay("mon");
+    for (const d of days) setDay(d, mon.open, mon.spans);
+    onHoursChanged();
+  }
+  $("#copyWeekdays").addEventListener("click", () => copyMonday(["tue", "wed", "thu", "fri"]));
+  $("#copyAll").addEventListener("click", () => copyMonday(DAYS.slice(1)));
+
+  function toggleBooking() {
+    const m = radio("booking_method");
+    $("#bookingUrlField").hidden = m !== "online";
+    $("#bookingHint").textContent = {
+      online: "Add a booking link below, or we'll use the website.",
+      phone: "We'll show a “Call to book” button using the phone number.",
+      walk_in: "We'll mark it as walk-in only.",
+      unknown: "If there's a phone number, we'll show it so you can call ahead.",
+    }[m];
+  }
+
+  $$("[data-estep]").forEach((b) => b.addEventListener("click", () => {
+    const inp = $("#eGroup");
+    const cur = numOrNull(inp.value);
+    const step = Number(b.dataset.estep);
+    const next = cur == null ? (step > 0 ? 2 : null) : cur + step;
+    inp.value = next == null || next < 1 ? "" : String(Math.min(next, 200));
+  }));
+
+  // Hearts (our rating)
+  function renderStars(v) {
+    form.elements.our_rating.value = v ? String(v) : "";
+    $("#stars").innerHTML = [1, 2, 3, 4, 5].map((n) =>
+      `<button type="button" class="star-btn ${v >= n ? "on" : ""}" role="radio" aria-checked="${v === n}" aria-label="${plural(n, "heart")}" data-star="${n}">${ic("heart", v >= n ? "ic-fill" : "")}</button>`).join("");
+  }
+  $("#stars").addEventListener("click", (e) => {
+    const n = Number(e.target.closest("[data-star]")?.dataset.star);
+    if (!n) return;
+    const cur = numOrNull(form.elements.our_rating.value);
+    renderStars(cur === n ? null : n);
+    $(`[data-star="${cur === n ? 1 : n}"]`)?.focus();
+  });
+
+  // Tags
+  function renderTags() {
+    $("#tagList").innerHTML = editorTags.map((t, i) =>
+      `<span class="tag-chip">${esc(t)}<button type="button" data-untag="${i}" aria-label="Remove tag ${esc(t)}">${ic("x")}</button></span>`).join("");
+  }
+  function addTag(raw) {
+    const t = String(raw).trim().toLowerCase().replace(/,+$/, "");
+    if (t && !editorTags.includes(t)) editorTags.push(t);
+    $("#tagEntry").value = "";
+    renderTags();
+  }
+  $("#tagEntry").addEventListener("keydown", (e) => {
+    const v = e.target.value;
+    if ((e.key === "Enter" || e.key === ",") && v.trim()) { e.preventDefault(); addTag(v); }
+    else if (e.key === "Enter") e.preventDefault();
+    else if (e.key === "Backspace" && !v && editorTags.length) { editorTags.pop(); renderTags(); }
+  });
+  $("#tagEntry").addEventListener("input", (e) => { if (e.target.value.includes(",")) e.target.value.split(",").forEach(addTag); });
+  $("#tagEntry").addEventListener("blur", (e) => { if (e.target.value.trim()) addTag(e.target.value); });
+  $("#tagBox").addEventListener("click", (e) => {
+    const i = e.target.closest("[data-untag]")?.dataset.untag;
+    if (i != null) { editorTags.splice(Number(i), 1); renderTags(); }
+    $("#tagEntry").focus();
+  });
+
+  function fillEditor(p) {
+    form.reset();
+    const el = form.elements;
+    for (const k of ["name", "street", "suburb", "postcode", "phone", "website", "booking_url", "booking_notes", "parking_notes", "transport_notes", "notes", "public_rating", "max_group_size", "hours_note"]) {
+      el[k].value = p?.[k] ?? "";
+    }
+    el.state.value = p?.state || "";
+    $("#eKitchen").innerHTML = timeOptions(14, p?.kitchen_closes || "", "Same as closing");
+    setRadio("category", p?.category || "");
+    setRadio("price_level", p?.price_level ?? "");
+    setRadio("booking_method", p?.booking_method || "unknown");
+    setRadio("parking_ease", p?.parking_ease ?? "");
+    setRadio("transport_ease", p?.transport_ease ?? "");
+    setRadio("alcohol", p?.alcohol || "");
+    setRadio("food", p ? foodOf(p) : "meals");
+    el.delivery.checked = !!p?.delivery;
+    el.takeaway.checked = !!p?.takeaway;
+    renderStars(p?.our_rating || null);
+    editorTags = [...(p?.tags || [])];
+    renderTags();
+
+    const has = !!p && hasHours(p);
+    setRadio("hoursMode", has ? "set" : "unknown");
+    $("#hoursEditor").hidden = !has;
+    for (const d of DAYS) {
+      const spans = has ? p.hours[d] || [] : [];
+      setDay(d, has ? spans.length > 0 : true, spans);
+    }
+
+    mealsAuto = p ? p.meals_auto === true : true;
+    foodTouched = !!p;
+    const meals = p?.meals || [];
+    periodBoxes().forEach((c) => (c.checked = meals.includes(c.value)));
+    el.snacks.checked = meals.includes("snacks");
+    applyAutoMeals();
+
+    $$("[aria-invalid]", form).forEach((x) => x.removeAttribute("aria-invalid"));
+    $("#editErrors").hidden = true;
+    refreshFoodUI();
+    toggleBooking();
+  }
+
+  function collectForm() {
+    const el = form.elements;
+    const errors = [], invalid = [];
+    const name = el.name.value.trim();
+    if (!name) { errors.push("Give this place a name."); invalid.push(el.name); }
+    const postcode = el.postcode.value.trim();
+    if (postcode && !/^\d{4}$/.test(postcode)) { errors.push("Postcodes have 4 digits."); invalid.push(el.postcode); }
+    const rating = numOrNull(el.public_rating.value);
+    if (rating !== null && (rating < 0 || rating > 5)) { errors.push("Public rating should be between 0 and 5."); invalid.push(el.public_rating); }
+    const group = numOrNull(el.max_group_size.value);
+    if (group !== null && group < 1) { errors.push("Group size should be at least 1."); invalid.push(el.max_group_size); }
+
+    const { hours, problems } = readHours();
+    for (const pr of problems) { if (!errors.includes(pr.msg)) errors.push(pr.msg); invalid.push(pr.el); }
+
+    const kitchen = blankToNull(el.kitchen_closes.value);
+    const food = radio("food") || "meals";
+    let meals = [];
+    if (food === "snacks") meals = ["snacks"];
+    else if (food === "meals") {
+      const periods = mealsAuto ? deriveMeals(hours, kitchen) : periodBoxes().filter((c) => c.checked).map((c) => c.value);
+      meals = [...periods, ...(el.snacks.checked ? ["snacks"] : [])];
+    }
+    const pending = $("#tagEntry").value.trim().toLowerCase();
+    const tags = pending && !editorTags.includes(pending) ? [...editorTags, pending] : [...editorTags];
+    const place = {
+      name,
+      category: blankToNull(radio("category")),
+      street: blankToNull(el.street.value.trim()),
+      suburb: blankToNull(el.suburb.value.trim()),
+      postcode: blankToNull(postcode),
+      state: blankToNull(el.state.value),
+      phone: blankToNull(el.phone.value.trim()),
+      website: blankToNull(el.website.value.trim()),
+      price_level: numOrNull(radio("price_level")),
+      hours,
+      kitchen_closes: kitchen,
+      hours_note: blankToNull(el.hours_note.value.trim()),
+      food,
+      meals_auto: mealsAuto,
+      meals,
+      alcohol: blankToNull(radio("alcohol")),
+      max_group_size: group,
+      booking_method: radio("booking_method") || "unknown",
+      booking_url: blankToNull(el.booking_url.value.trim()),
+      booking_notes: blankToNull(el.booking_notes.value.trim()),
+      delivery: el.delivery.checked,
+      takeaway: el.takeaway.checked,
+      public_rating: rating,
+      our_rating: numOrNull(el.our_rating.value),
+      parking_ease: numOrNull(radio("parking_ease")),
+      parking_notes: blankToNull(el.parking_notes.value.trim()),
+      transport_ease: numOrNull(radio("transport_ease")),
+      transport_notes: blankToNull(el.transport_notes.value.trim()),
+      tags,
+      notes: blankToNull(el.notes.value.trim()),
+    };
+    return { place, errors, invalid };
+  }
+
+  function openEditor(p) {
+    state.editingId = p?.id || null;
+    $("#editEyebrow").textContent = p ? "Edit place" : "New place";
+    $("#editTitle").textContent = p ? p.name : "Add a place";
+    $("#saveBtn").textContent = p ? "Save changes" : "Save place";
+    $("#deleteBtn").hidden = !p;
+    fillEditor(p);
+    editorSnapshot = JSON.stringify(collectForm().place);
+    editDlg.showModal();
+    $("#editBody").scrollTop = 0;
+    if (!p) form.elements.name.focus();
+  }
+  const isDirty = () => JSON.stringify(collectForm().place) !== editorSnapshot;
+  function requestCloseEditor() {
+    if (isDirty() && !confirm("Discard your changes?")) return;
+    editDlg.close();
+  }
+  editDlg.addEventListener("cancel", (e) => { e.preventDefault(); requestCloseEditor(); });
+  $$("[data-editor-close]", editDlg).forEach((b) => b.addEventListener("click", requestCloseEditor));
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const { place, errors, invalid } = collectForm();
+    $$("[aria-invalid]", form).forEach((x) => x.removeAttribute("aria-invalid"));
+    if (errors.length) {
+      invalid.forEach((x) => x.setAttribute("aria-invalid", "true"));
+      const box = $("#editErrors");
+      box.hidden = false;
+      box.innerHTML = `<strong>Almost there. Please check:</strong><ul>${errors.map((x) => `<li>${esc(x)}</li>`).join("")}</ul>`;
+      $("#editBody").scrollTo({ top: 0, behavior: "smooth" });
+      invalid[0]?.focus({ preventScroll: true });
+      return;
+    }
+    if (state.editingId) place.id = state.editingId;
+    else place.workspace_id = state.wsId;
+    const btn = $("#saveBtn"), label = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = "Saving…";
+    try {
+      const saved = await db.save(place);
+      const i = state.places.findIndex((p) => p.id === saved.id);
+      if (i >= 0) state.places[i] = saved; else state.places.push(saved);
+      editDlg.close();
+      refreshSuggestions();
+      render();
+      toast(state.editingId ? "Changes saved" : `Saved “${saved.name}”`);
+    } catch (err) {
+      const box = $("#editErrors");
+      box.hidden = false;
+      box.textContent = "We couldn't save that: " + (err.message || err);
+      $("#editBody").scrollTo({ top: 0, behavior: "smooth" });
+    } finally {
+      btn.disabled = false;
+      btn.textContent = label;
+    }
+  });
+
+  $("#deleteBtn").addEventListener("click", async () => {
+    const p = state.places.find((x) => x.id === state.editingId);
+    if (!p) return;
+    try {
+      await db.remove(p.id);
+    } catch (err) {
+      const box = $("#editErrors");
+      box.hidden = false;
+      box.textContent = "We couldn't delete that: " + (err.message || err);
+      return;
+    }
+    state.places = state.places.filter((x) => x.id !== p.id);
+    editDlg.close();
+    refreshSuggestions();
+    render();
+    toast(`Deleted “${p.name}”`, {
+      label: "Undo",
+      fn: async () => {
+        try {
+          const back = await db.restore(p);
+          state.places.push(back);
+          refreshSuggestions();
+          render();
+          toast(`Restored “${p.name}”`);
+        } catch (err) { toast("Couldn't restore: " + (err.message || err)); }
+      },
+    });
+  });
+
+  $("#addBtn").addEventListener("click", () => openEditor(null));
+  $("#fab").addEventListener("click", () => openEditor(null));
+
+  // ══════════════════════════════════════════════════════════
+  // Boot
+  // ══════════════════════════════════════════════════════════
+  const todayOpt = $(`#fDay option[value="${todayIdx()}"]`);
+  if (todayOpt) todayOpt.textContent += " (today)";
+  syncControls();
+
+  if (DEMO) {
+    $("#demoBanner").hidden = false;
+    $("#userMenu").hidden = false;
+    $("#menuLabel").textContent = "You're exploring";
+    $("#userEmail").textContent = "Demo mode";
+    $("#userInitial").textContent = "D";
+    $("#resetDemoBtn").hidden = false;
+    $("#resetDemoBtn").addEventListener("click", async () => {
+      $("#userMenu").open = false;
+      if (!confirm("Replace everything in the demo list with the sample places?")) return;
+      ls.del(DEMO_KEY);
+      await loadPlaces();
+      toast("Demo data reset");
+    });
+    $("#appView").hidden = false;
+    $("#fab").hidden = false;
+    loadWorkspaces();
+  } else if (!sb) {
+    $("#authView").hidden = false;
+    authMessage("Couldn't load the sign-in library. Check your internet connection and reload.");
+  } else {
+    setAuthMode("signin");
+    sb.auth.getSession().then(({ data }) => onSession(data.session));
+    sb.auth.onAuthStateChange((_event, session) => {
+      if ((session?.user?.id || null) !== (state.user?.id || null)) onSession(session);
+    });
+  }
+})();
+</script>
+</body>
+</html>
