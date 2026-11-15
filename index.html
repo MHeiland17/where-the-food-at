@@ -925,6 +925,14 @@ dialog.modal::backdrop { background: rgba(43, 34, 48, .4); backdrop-filter: blur
       </div>
     </section>
     <section class="fsec">
+      <h3>Been there?</h3>
+      <div class="seg" role="radiogroup" aria-label="Visited">
+        <label><input type="radio" name="f-visited" data-f="visited" value=""><span>Any</span></label>
+        <label><input type="radio" name="f-visited" data-f="visited" value="yes"><span>We've been</span></label>
+        <label><input type="radio" name="f-visited" data-f="visited" value="no"><span>Not yet</span></label>
+      </div>
+    </section>
+    <section class="fsec">
       <h3>Public transport</h3>
       <div class="seg" role="radiogroup" aria-label="Public transport">
         <label><input type="radio" name="f-transport" data-f="transportMin" value=""><span>Any</span></label>
@@ -1011,6 +1019,13 @@ dialog.modal::backdrop { background: rgba(43, 34, 48, .4); backdrop-filter: blur
               <label class="chip"><input type="radio" name="category" value="takeaway"><span>Takeaway</span></label>
               <label class="chip"><input type="radio" name="category" value="bakery"><span>Bakery</span></label>
               <label class="chip"><input type="radio" name="category" value="other"><span>Other</span></label>
+            </div>
+          </div>
+          <div class="field">
+            <span class="label" id="visitedLabel">Have you been?</span>
+            <div class="seg" role="radiogroup" aria-labelledby="visitedLabel">
+              <label><input type="radio" name="visited" value="no" checked><span>Not yet, want to try</span></label>
+              <label><input type="radio" name="visited" value="yes"><span>We've been</span></label>
             </div>
           </div>
         </div>
@@ -1430,7 +1445,7 @@ dialog.modal::backdrop { background: rgba(43, 34, 48, .4); backdrop-filter: blur
         price_level: null, food: "meals", meals_auto: true, meals: [], hours: {}, kitchen_closes: null, hours_note: null,
         alcohol: null, max_group_size: null, booking_method: "unknown", booking_url: null, booking_notes: null,
         delivery: null, takeaway: null, public_rating: null, our_rating: null, parking_ease: null, parking_notes: null,
-        transport_ease: null, transport_notes: null, tags: [], notes: null, ...p,
+        transport_ease: null, transport_notes: null, visited: false, tags: [], notes: null, ...p,
       };
       if (place.food === "meals" && place.meals_auto) {
         place.meals = [...deriveMeals(place.hours, place.kitchen_closes), ...(p.snacks ? ["snacks"] : [])];
@@ -1441,19 +1456,19 @@ dialog.modal::backdrop { background: rgba(43, 34, 48, .4); backdrop-filter: blur
     const wk = (o, c) => [[o, c]];
     return [
       mk(1, { name: "Golden Lantern Dumpling House", category: "restaurant", street: "12 Station St", suburb: "Box Hill", postcode: "3128",
-        phone: "03 9000 1111", price_level: 2, max_group_size: 12, booking_method: "phone", alcohol: "byo",
+        phone: "03 9000 1111", price_level: 2, max_group_size: 12, booking_method: "phone", alcohol: "byo", visited: true,
         hours: { mon: [], tue: wk("11:30", "21:30"), wed: wk("11:30", "21:30"), thu: wk("11:30", "21:30"), fri: wk("11:30", "22:00"), sat: wk("11:00", "22:00"), sun: wk("11:00", "21:00") },
         kitchen_closes: "21:00", takeaway: true, delivery: true, public_rating: 4.3, our_rating: 5,
         parking_ease: 2, parking_notes: "Shopping centre car park, 3 hours free", transport_ease: 3, transport_notes: "Box Hill station, 2 min walk",
         tags: ["dumplings", "family", "lazy susan"], notes: "Ask for the round table upstairs for big groups." }),
       mk(2, { name: "The Olive Grove", category: "restaurant", street: "88 Whitehorse Rd", suburb: "Box Hill", postcode: "3128",
-        phone: "03 9000 2222", website: "example.com/olivegrove", price_level: 3, max_group_size: 8, alcohol: "licensed",
+        phone: "03 9000 2222", website: "example.com/olivegrove", price_level: 3, max_group_size: 8, alcohol: "licensed", visited: true,
         booking_method: "online", booking_url: "https://example.com/olivegrove/book",
         hours: { mon: [], tue: [], wed: wk("17:30", "22:00"), thu: wk("17:30", "22:00"), fri: wk("17:30", "23:00"), sat: [["12:00", "15:00"], ["17:30", "23:00"]], sun: wk("12:00", "16:00") },
         hours_note: "Last seating 9pm", public_rating: 4.6, our_rating: 4, parking_ease: 1, parking_notes: "Street only, metered until 7pm",
         transport_ease: 3, transport_notes: "Tram 109 stops out front", tags: ["date night", "pasta"] }),
       mk(3, { name: "Little Fern Café", category: "cafe", street: "4 Burke Rd", suburb: "Camberwell", postcode: "3124",
-        price_level: 1, max_group_size: 6, booking_method: "walk_in", alcohol: "none", snacks: true,
+        price_level: 1, max_group_size: 6, booking_method: "walk_in", alcohol: "none", snacks: true, visited: true,
         hours: Object.fromEntries(DAYS.map((d) => [d, d === "sat" || d === "sun" ? wk("08:00", "15:00") : wk("07:00", "15:00")])),
         takeaway: true, delivery: false, public_rating: 4.5, our_rating: 4, parking_ease: 3, parking_notes: "Big free car park behind the library",
         transport_ease: 2, tags: ["coffee", "kid friendly"] }),
@@ -1508,8 +1523,15 @@ dialog.modal::backdrop { background: rgba(43, 34, 48, .4); backdrop-filter: blur
         return saved;
       }
       const { id, ...fields } = place;
-      const q = id ? sb.from("places").update(fields).eq("id", id).select().single() : sb.from("places").insert(fields).select().single();
-      const { data, error } = await q;
+      const send = (f) => (id ? sb.from("places").update(f).eq("id", id) : sb.from("places").insert(f)).select().single();
+      let { data, error } = await send(fields);
+      // If the database hasn't had the "visited" column added yet (supabase/003_visited.sql), save everything
+      // else rather than failing, and say what's missing.
+      if (error && /'visited' column/.test(error.message || "") && "visited" in fields) {
+        const { visited, ...rest } = fields;
+        ({ data, error } = await send(rest));
+        if (!error) toast("Saved, but “visited” needs a quick database update (supabase/003_visited.sql).");
+      }
       if (error) throw error;
       return data;
     },
@@ -1539,7 +1561,7 @@ dialog.modal::backdrop { background: rgba(43, 34, 48, .4); backdrop-filter: blur
   // ══════════════════════════════════════════════════════════
   const emptyFilters = () => ({
     area: "", text: "", day: null, time: "", meals: [], group: null, price: null, booking: "", alcohol: "",
-    delivery: false, takeaway: false, publicMin: null, oursMin: null, parkingMin: null, transportMin: null, includeUnknown: false,
+    delivery: false, takeaway: false, publicMin: null, oursMin: null, parkingMin: null, transportMin: null, visited: "", includeUnknown: false,
   });
   const NUM_KEYS = new Set(["day", "group", "price", "publicMin", "oursMin", "parkingMin", "transportMin"]);
   const state = {
@@ -1790,6 +1812,7 @@ dialog.modal::backdrop { background: rgba(43, 34, 48, .4); backdrop-filter: blur
     if (f.oursMin) checks.push(p.our_rating == null ? null : p.our_rating >= f.oursMin);
     if (f.parkingMin) checks.push(p.parking_ease == null ? null : p.parking_ease >= f.parkingMin);
     if (f.transportMin) checks.push(p.transport_ease == null ? null : p.transport_ease >= f.transportMin);
+    if (f.visited) checks.push(f.visited === "yes" ? !!p.visited : !p.visited);
     if (checks.includes(false)) return null;
     const unknowns = checks.filter((c) => c === null).length;
     if (unknowns && !f.includeUnknown) return null;
@@ -1825,6 +1848,7 @@ dialog.modal::backdrop { background: rgba(43, 34, 48, .4); backdrop-filter: blur
     if (f.takeaway) out.push({ label: "Takeaway", clear: () => (f.takeaway = false) });
     if (f.parkingMin) out.push({ label: f.parkingMin === 3 ? "Easy parking" : "Parking OK or easy", clear: () => (f.parkingMin = null) });
     if (f.transportMin) out.push({ label: f.transportMin === 3 ? "Easy public transport" : "Public transport OK or easy", clear: () => (f.transportMin = null) });
+    if (f.visited) out.push({ label: f.visited === "yes" ? "We've been" : "Not tried yet", clear: () => (f.visited = "") });
     if (f.publicMin) out.push({ label: `Rated ${f.publicMin}+`, clear: () => (f.publicMin = null) });
     if (f.oursMin) out.push({ label: f.oursMin === 5 ? "Our favourites" : `Our rating ${f.oursMin}+`, clear: () => (f.oursMin = null) });
     if (f.text.trim()) out.push({ label: `“${f.text.trim()}”`, clear: () => (f.text = "") });
@@ -1833,7 +1857,7 @@ dialog.modal::backdrop { background: rgba(43, 34, 48, .4); backdrop-filter: blur
   }
   const sheetFilterCount = () => {
     const f = state.f;
-    return [f.meals.length, f.alcohol, f.price, f.booking, f.delivery, f.takeaway, f.parkingMin, f.transportMin, f.publicMin, f.oursMin, f.includeUnknown].filter(Boolean).length;
+    return [f.meals.length, f.alcohol, f.price, f.booking, f.delivery, f.takeaway, f.parkingMin, f.transportMin, f.visited, f.publicMin, f.oursMin, f.includeUnknown].filter(Boolean).length;
   };
 
   // ── Controls ↔ state ──
@@ -1978,7 +2002,8 @@ dialog.modal::backdrop { background: rgba(43, 34, 48, .4); backdrop-filter: blur
     if (p.public_rating != null) facts.push(`<li>${ic("star")}${esc(Number(p.public_rating).toFixed(1))}</li>`);
     if (p.delivery) facts.push(`<li>${ic("bike")}Delivery</li>`);
     if (p.takeaway) facts.push(`<li>${ic("bag")}Takeaway</li>`);
-    const pills = foodPills(p).concat((p.tags || []).slice(0, 4).map((t) => `<span class="pill tag">${esc(t)}</span>`));
+    const visitedPill = p.visited ? `<span class="pill ok">${ic("check")}Been here</span>` : `<span class="pill">To try</span>`;
+    const pills = [visitedPill].concat(foodPills(p), (p.tags || []).slice(0, 4).map((t) => `<span class="pill tag">${esc(t)}</span>`));
     return `
       <article class="card">
         <div class="card-main">
@@ -2081,7 +2106,12 @@ dialog.modal::backdrop { background: rgba(43, 34, 48, .4); backdrop-filter: blur
       <h2 id="detailTitle">${esc(p.name)}</h2>
       ${sub ? `<p class="card-sub">${esc(sub)}</p>` : ""}
       <div class="detail-status"><span class="status ${st.cls}">${esc(st.text)}</span>${priceHTML(p.price_level)}</div>
-      ${actions.length ? `<div class="detail-actions">${actions.join("")}</div>` : ""}`;
+      <div class="detail-actions">
+        ${actions.join("")}
+        <button type="button" class="btn btn-sm ${p.visited ? "btn-soft" : "btn-outline"}" id="visitedToggle" aria-pressed="${!!p.visited}">
+          ${p.visited ? `${ic("check")}Been here` : "Mark as visited"}
+        </button>
+      </div>`;
 
     const tile = (label, value) => `<div class="tile"><small>${label}</small><strong>${value || '<span class="none">Not added</span>'}</strong></div>`;
     const bookingText = { online: "Online", phone: p.phone ? `By phone · ${esc(p.phone)}` : "By phone", walk_in: "Walk-in only" }[p.booking_method]
@@ -2127,6 +2157,24 @@ dialog.modal::backdrop { background: rgba(43, 34, 48, .4); backdrop-filter: blur
     if (!dlg.open) dlg.showModal();
     $(".sheet-body", dlg).scrollTop = 0;
   }
+  // One tap in the details header flips "visited" without opening the editor.
+  $("#detailHead").addEventListener("click", async (e) => {
+    const btn = e.target.closest("#visitedToggle");
+    if (!btn) return;
+    const p = state.places.find((x) => x.id === state.detailId);
+    if (!p) return;
+    btn.disabled = true;
+    try {
+      const saved = await db.save({ id: p.id, visited: !p.visited });
+      Object.assign(p, saved);
+      render();
+      openDetail(p.id);
+      toast(p.visited ? `Marked “${p.name}” as visited` : `Moved “${p.name}” back to “to try”`);
+    } catch (err) {
+      btn.disabled = false;
+      toast("Couldn't update: " + (err.message || err));
+    }
+  });
   $("#detailEditBtn").addEventListener("click", () => {
     const p = state.places.find((x) => x.id === state.detailId);
     $("#detailDlg").close();
@@ -2245,16 +2293,21 @@ dialog.modal::backdrop { background: rgba(43, 34, 48, .4); backdrop-filter: blur
     const isBar = radio("category") === "bar";
     $("#mealsField").hidden = food !== "meals";
     $("#foodHint").textContent = food === "none"
-      ? (isBar ? "Bars start as drinks only. Choose Meals or Snacks if they serve food." : "This place won't appear for meal filters.")
+      ? "This place won't appear for meal filters."
       : food === "snacks" ? "Shown as “Snacks”. It won't match breakfast, lunch or dinner filters." : "";
     $("#mealChips").classList.toggle("auto", mealsAuto);
     const hoursKnown = Object.keys(readHours().hours).length > 0;
+    const anyMeal = periodBoxes().some((c) => c.checked);
     $("#mealsBadge").innerHTML = mealsAuto
       ? `<span class="auto-badge">${ic("sparkle")}Automatic</span>`
-      : `<span class="auto-badge manual">Set by you</span>`;
+      : anyMeal ? `<span class="auto-badge manual">Set by you</span>` : "";
     $("#mealsHelp").innerHTML = mealsAuto
       ? (hoursKnown ? "Worked out from the opening hours and kitchen time. Tap a meal to change it." : "Add opening hours above and these fill in automatically, or tap to choose.")
-      : `You've chosen these. <button type="button" class="link-btn" id="resetMeals">Use opening hours instead</button>`;
+      : !anyMeal
+        ? (isBar
+          ? `Not worked out from the hours for bars. Tick what they serve, or choose Snacks only or No food above. <button type="button" class="link-btn" id="resetMeals">Use opening hours</button>`
+          : `Nothing ticked yet. Tick what they serve. <button type="button" class="link-btn" id="resetMeals">Use opening hours instead</button>`)
+        : `You've chosen these. <button type="button" class="link-btn" id="resetMeals">Use opening hours instead</button>`;
   }
   function onHoursChanged() { applyAutoMeals(); refreshFoodUI(); }
 
@@ -2270,9 +2323,12 @@ dialog.modal::backdrop { background: rgba(43, 34, 48, .4); backdrop-filter: blur
     else if (t.name === "meals") { mealsAuto = false; refreshFoodUI(); }
     else if (t.name === "food") { foodTouched = true; refreshFoodUI(); }
     else if (t.name === "category") {
-      const isBar = t.value === "bar";
-      if (!foodTouched) setRadio("food", isBar ? "none" : "meals");
-      if (isBar && !radio("alcohol")) setRadio("alcohol", "licensed");
+      // "No food" is never chosen for you. For a bar, meals just stop being guessed from the opening hours
+      // (a bar open 4pm–1am would otherwise look like a dinner place), so you tick what they actually serve.
+      if (t.value === "bar") {
+        if (!foodTouched && mealsAuto) { mealsAuto = false; periodBoxes().forEach((c) => (c.checked = false)); }
+        if (!radio("alcohol")) setRadio("alcohol", "licensed");
+      }
       refreshFoodUI();
     } else if (t.name === "booking_method") toggleBooking();
   });
@@ -2386,6 +2442,7 @@ dialog.modal::backdrop { background: rgba(43, 34, 48, .4); backdrop-filter: blur
     setRadio("booking_method", p?.booking_method || "unknown");
     setRadio("parking_ease", p?.parking_ease ?? "");
     setRadio("transport_ease", p?.transport_ease ?? "");
+    setRadio("visited", p?.visited ? "yes" : "no");
     setRadio("alcohol", p?.alcohol || "");
     setRadio("food", p ? foodOf(p) : "meals");
     el.delivery.checked = !!p?.delivery;
@@ -2473,6 +2530,7 @@ dialog.modal::backdrop { background: rgba(43, 34, 48, .4); backdrop-filter: blur
       parking_notes: blankToNull(el.parking_notes.value.trim()),
       transport_ease: numOrNull(radio("transport_ease")),
       transport_notes: blankToNull(el.transport_notes.value.trim()),
+      visited: radio("visited") === "yes",
       tags,
       notes: blankToNull(el.notes.value.trim()),
       google_place_id: editorGoogle?.id ?? null,
@@ -2599,14 +2657,15 @@ dialog.modal::backdrop { background: rgba(43, 34, 48, .4); backdrop-filter: blur
     try {
       const { place } = await placesApi({ action: "details", id: pendingPick.id });
       const replace = $('input[name="prefillMode"]:checked', prefillDlg).value === "replace";
-      const filled = applyPrefill(mapGooglePlace(place), replace);
+      const { n: filled, foodUnknown } = applyPrefill(mapGooglePlace(place), replace);
       editorGoogle = { id: pendingPick.id, at: new Date().toISOString() };
       renderLinked();
       showResults("");
       prefillDlg.close();
+      const foodNote = foodUnknown ? " Google doesn't say whether they serve food, so check the Food setting." : "";
       toast(filled
-        ? `Filled ${plural(filled, "field")} from Google. They're marked “from Google”; check them, then save.`
-        : "Nothing new to fill in. Your entries were kept.");
+        ? `Filled ${plural(filled, "field")} from Google. They're marked “from Google”; check them, then save.${foodNote}`
+        : `Nothing new to fill in. Your entries were kept.${foodNote}`);
     } catch (err) {
       $("#prefillErr").hidden = false;
       $("#prefillErr").textContent = err.message || String(err);
@@ -2667,7 +2726,12 @@ dialog.modal::backdrop { background: rgba(43, 34, 48, .4); backdrop-filter: blur
     const licensed = g.servesBeer || g.servesWine || g.servesCocktails;
     const phone = g.nationalPhoneNumber || null;
     const website = g.websiteUri || null;
+    const category = mapCategory(g.primaryType, g.types);
+    // Google's API has no "Food at bar" field, so for bars look for any other sign of food.
+    const foodSignal = g.servesDessert === true || g.servesVegetarianFood === true
+      || (g.types || []).some((t) => /(restaurant|meal_takeaway|meal_delivery|^food$)/.test(t));
     return {
+      food: category === "bar" && !meals.length && foodSignal ? "snacks" : null,
       name: g.displayName?.text || null,
       street: street || null,
       suburb: comp("locality") || comp("sublocality") || null,
@@ -2675,7 +2739,7 @@ dialog.modal::backdrop { background: rgba(43, 34, 48, .4); backdrop-filter: blur
       state: AU_STATES.includes(state) ? state : null,
       phone,
       website,
-      category: mapCategory(g.primaryType, g.types),
+      category,
       price_level: PRICE_LEVELS[g.priceLevel] ?? null,
       hours: mapHours(g.regularOpeningHours),
       meals: meals.length ? meals : null,
@@ -2688,10 +2752,11 @@ dialog.modal::backdrop { background: rgba(43, 34, 48, .4); backdrop-filter: blur
     };
   }
 
-  // Put mapped values into the form. Returns how many fields were filled.
+  // Put mapped values into the form. Returns how many fields were filled, and whether food needs checking.
   function applyPrefill(m, replace) {
     const el = F;
     let n = 0;
+    let foodUnknown = false;
     const mark = (node) => node?.closest(".switch-row, .field, .esec")?.classList.add("prefilled");
     // The name box holds what was searched for, so the place's proper name always replaces it.
     if (m.name && el.name.value !== m.name) { el.name.value = m.name; mark(el.name); n++; }
@@ -2702,7 +2767,6 @@ dialog.modal::backdrop { background: rgba(43, 34, 48, .4); backdrop-filter: blur
     if (m.public_rating != null && (replace || el.public_rating.value === "")) { el.public_rating.value = String(m.public_rating); mark(el.public_rating); n++; }
 
     const radioEmpty = (k) => ["", "unknown"].includes(radio(k));
-    const categoryWasEmpty = radioEmpty("category");
     for (const k of ["category", "price_level", "booking_method", "parking_ease", "alcohol"]) {
       if (m[k] != null && (replace || radioEmpty(k)) && radio(k) !== String(m[k])) {
         setRadio(k, m[k]);
@@ -2722,22 +2786,30 @@ dialog.modal::backdrop { background: rgba(43, 34, 48, .4); backdrop-filter: blur
       n++;
     }
 
-    // Food: Google's own meal flags win; otherwise meals keep being worked out from the hours.
-    const foodUntouched = radio("food") === "meals" && mealsAuto;
+    // Food. "No food" is never set from Google: missing information isn't the same as "they don't serve food".
+    // Google's meal flags win; a bar with other food signs becomes "Snacks only"; a bar with no information
+    // is left for you to fill in; anything else keeps meals worked out from the hours.
+    const foodUntouched = radio("food") === "meals" && (mealsAuto || !periodBoxes().some((c) => c.checked));
+    const isBar = radio("category") === "bar";
     if (m.meals && (replace || foodUntouched)) {
       setRadio("food", "meals");
       mealsAuto = false;
       periodBoxes().forEach((c) => (c.checked = m.meals.includes(c.value)));
       mark($("#mealsField"));
       n++;
-    } else if (!m.meals && m.category === "bar" && (categoryWasEmpty || replace) && !foodTouched) {
-      setRadio("food", "none"); // bars default to drinks only, as when picking "Bar" by hand
+    } else if (m.food === "snacks" && (replace || foodUntouched)) {
+      setRadio("food", "snacks");
       mark(form.querySelector('input[name="food"]'));
+      n++;
+    } else if (isBar && !m.meals && foodUntouched) {
+      mealsAuto = false;
+      periodBoxes().forEach((c) => (c.checked = false));
+      foodUnknown = true;
     }
     applyAutoMeals();
     refreshFoodUI();
     toggleBooking();
-    return n;
+    return { n, foodUnknown };
   }
 
   // ── Demo mode: made-up Google-shaped results so the flow can be tried without a key ──

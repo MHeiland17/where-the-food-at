@@ -219,3 +219,8 @@ $$;
 -- Only the Edge Function may call this; otherwise a signed-in user could use up the daily cap.
 revoke all on function public.bump_places_usage(text, integer) from public, anon, authenticated;
 grant execute on function public.bump_places_usage(text, integer) to service_role;
+
+-- ─────────────────────────────────────────────────────────────
+-- v4: "visited" marker (same as 003_visited.sql)
+-- ─────────────────────────────────────────────────────────────
+alter table public.places add column if not exists visited boolean not null default false;

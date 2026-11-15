@@ -34,7 +34,7 @@ const DETAIL_FIELDS = [
   "nationalPhoneNumber", "websiteUri", "regularOpeningHours",
   "priceLevel", "rating", "userRatingCount",
   "servesBreakfast", "servesBrunch", "servesLunch", "servesDinner",
-  "servesBeer", "servesWine", "servesCocktails",
+  "servesBeer", "servesWine", "servesCocktails", "servesDessert", "servesVegetarianFood",
   "delivery", "takeout", "dineIn", "reservable", "goodForGroups", "parkingOptions",
 ].join(",");
 
