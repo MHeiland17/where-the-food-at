@@ -401,6 +401,7 @@ textarea.input { height: auto; min-height: 110px; padding: 12px 14px; resize: ve
 .qchip .ic { width: 16px; height: 16px; }
 .qsep { width: 1px; height: 24px; background: var(--line-strong); margin: 0 2px; }
 .qchip-more { margin-left: auto; background: var(--surface); }
+.more-mobile { display: none; }
 .count-dot {
   display: inline-grid; place-items: center; min-width: 22px; height: 22px; padding: 0 6px; border-radius: var(--r-pill);
   background: var(--accent); color: #fff; font-size: 12px; font-weight: 700;
@@ -713,13 +714,13 @@ dialog.modal::backdrop { background: rgba(43, 34, 48, .4); backdrop-filter: blur
   .quick { flex-wrap: nowrap; overflow-x: auto; margin: 16px -16px 0; padding: 0 16px 4px; scrollbar-width: none; }
   .quick::-webkit-scrollbar { display: none; }
   .qchip { flex: none; }
-  .qchip-more { margin-left: 0; }
+  /* Phones: "More filters", search and sort each get a full-width row. */
+  .qchip-more { display: none; }
+  .more-mobile { display: flex; margin-top: 12px; }
   .results { margin-top: 36px; }
   .toolbar { align-items: stretch; flex-direction: column; }
-  .toolbar-right { width: 100%; flex-wrap: nowrap; gap: 8px; }
-  .search-mini { flex: 1; min-width: 0; }
-  .search-mini input { width: 100%; }
-  .sort-select { max-width: 150px; }
+  .toolbar-right { width: 100%; flex-direction: column; align-items: stretch; gap: 8px; }
+  .toolbar-right > label, .search-mini, .search-mini input, .sort-select { width: 100%; max-width: none; }
   .hide-mobile { display: none !important; }
   .list { margin-top: 20px; }
   .fab { display: grid; }
@@ -860,8 +861,9 @@ dialog.modal::backdrop { background: rgba(43, 34, 48, .4); backdrop-filter: blur
       <button type="button" class="qchip" data-quick="parking" aria-pressed="false"><i data-ic="parking"></i>Easy parking</button>
       <button type="button" class="qchip" data-quick="book" aria-pressed="false"><i data-ic="calendar"></i>Can book</button>
       <button type="button" class="qchip" data-quick="drinks" aria-pressed="false"><i data-ic="wine"></i>Alcohol</button>
-      <button type="button" class="qchip qchip-more" id="moreFiltersBtn" aria-haspopup="dialog"><i data-ic="sliders"></i>More filters <span class="count-dot" id="moreCount" hidden></span></button>
+      <button type="button" class="qchip qchip-more" data-more-filters aria-haspopup="dialog"><i data-ic="sliders"></i>More filters <span class="count-dot more-count" hidden></span></button>
     </div>
+    <button type="button" class="btn btn-outline btn-block more-mobile" data-more-filters aria-haspopup="dialog"><i data-ic="sliders"></i>More filters <span class="count-dot more-count" hidden></span></button>
   </section>
 
   <section class="results" aria-labelledby="resultsTitle">
@@ -2363,8 +2365,7 @@ dialog.modal::backdrop { background: rgba(43, 34, 48, .4); backdrop-filter: blur
     }
     $("#clearArea").hidden = !f.area;
     const n = sheetFilterCount();
-    $("#moreCount").hidden = !n;
-    $("#moreCount").textContent = n;
+    $$(".more-count").forEach((c) => { c.hidden = !n; c.textContent = n; });
   }
   function update(except) { syncControls(except); render(); }
 
@@ -2555,7 +2556,7 @@ dialog.modal::backdrop { background: rgba(43, 34, 48, .4); backdrop-filter: blur
     });
     $$("[data-close]", dlg).forEach((b) => b.addEventListener("click", () => dlg.close()));
   }
-  $("#moreFiltersBtn").addEventListener("click", () => $("#filtersDlg").showModal());
+  $$("[data-more-filters]").forEach((b) => b.addEventListener("click", () => $("#filtersDlg").showModal()));
 
   // ══════════════════════════════════════════════════════════
   // Detail sheet
