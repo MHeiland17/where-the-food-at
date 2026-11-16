@@ -604,6 +604,7 @@ dialog.sheet::backdrop { background: rgba(43, 34, 48, .32); backdrop-filter: blu
 .tile small { display: block; font-size: 12px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); }
 .tile strong { display: block; margin-top: 4px; font-weight: 600; font-size: 15px; }
 .tile .none { color: var(--muted); font-weight: 500; }
+.tile .tile-line { display: block; white-space: nowrap; }
 .hours-table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 15px; }
 .hours-table td { padding: 9px 0; border-bottom: 1px solid var(--line); }
 .hours-table td:last-child { text-align: right; color: var(--ink-2); }
@@ -2649,6 +2650,9 @@ dialog.modal::backdrop { background: rgba(43, 34, 48, .4); backdrop-filter: blur
     if (p.phone) actions.push(`<a class="btn ${p.booking_method === "online" ? "btn-outline" : "btn-primary"} btn-sm" href="${esc(telHref(p.phone))}">${ic("phone")}${p.booking_method === "phone" || p.booking_method === "unknown" ? "Call to book" : "Call"}</a>`);
     if (site) actions.push(`<a class="btn btn-outline btn-sm" href="${esc(site)}" target="_blank" rel="noopener">${ic("globe")}Website</a>`);
     if (address) actions.push(`<a class="btn btn-outline btn-sm" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.name + ", " + address)}" target="_blank" rel="noopener">${ic("nav")}Directions</a>`);
+    // Google search for the place: brings up its business panel (reviews, photos, hours, menu).
+    const googleQuery = [p.name, p.suburb || p.street, p.state].filter(Boolean).join(" ");
+    actions.push(`<a class="btn btn-outline btn-sm" href="https://www.google.com/search?q=${encodeURIComponent(googleQuery)}" target="_blank" rel="noopener">${ic("search")}Google</a>`);
 
     // Key info + actions live in the fixed header, so they stay on screen while the details scroll.
     $("#detailHead").innerHTML = `
@@ -2666,7 +2670,7 @@ dialog.modal::backdrop { background: rgba(43, 34, 48, .4); backdrop-filter: blur
       </div>`;
 
     const tile = (label, value) => `<div class="tile"><small>${label}</small><strong>${value || '<span class="none">Not added</span>'}</strong></div>`;
-    const bookingText = { online: "Online", phone: p.phone ? `By phone · ${esc(p.phone)}` : "By phone", walk_in: "Walk-in only" }[p.booking_method]
+    const bookingText = { online: "Online", phone: p.phone ? `By phone<span class="tile-line">${esc(p.phone)}</span>` : "By phone", walk_in: "Walk-in only" }[p.booking_method]
       || (p.phone ? `No online booking · ${esc(p.phone)}` : "");
     const yesNo = (v) => (v == null ? "" : v ? "Yes" : "No");
     const food = foodOf(p);
