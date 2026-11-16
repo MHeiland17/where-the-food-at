@@ -89,6 +89,8 @@ p { margin: 0; }
 a { color: var(--accent); text-underline-offset: 3px; }
 button, input, select, textarea { font: inherit; color: inherit; }
 button { cursor: pointer; }
+/* No double-tap zoom on controls (pinch zoom still works). */
+button, a, label, input, select, textarea { touch-action: manipulation; }
 [hidden] { display: none !important; }
 .sr-only {
   position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden;
@@ -233,8 +235,11 @@ textarea.input { height: auto; min-height: 110px; padding: 12px 14px; resize: ve
 .stepper input::-webkit-inner-spin-button, .stepper input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
 .step-btn {
   width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--line-strong);
-  background: var(--surface); font-size: 20px; line-height: 1; color: var(--ink-2); display: grid; place-items: center;
+  background: var(--surface); padding: 0; color: var(--ink-2); display: grid; place-items: center;
+  /* Quick repeated taps shouldn't double-tap-zoom the page on phones. */
+  touch-action: manipulation; user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent;
 }
+.step-btn .ic { width: 18px; height: 18px; stroke-width: 2.2; }
 .step-btn:hover { border-color: var(--accent); color: var(--accent); }
 
 /* Alerts */
@@ -383,7 +388,8 @@ textarea.input { height: auto; min-height: 110px; padding: 12px 14px; resize: ve
 .pl-when input[type=time] { width: auto; flex: 1; }
 .pl-guests .pl-input input { text-align: center; width: 48px; flex: none; -moz-appearance: textfield; }
 .pl-guests .pl-input input::-webkit-inner-spin-button { -webkit-appearance: none; }
-.pl-guests .step-btn { width: 34px; height: 34px; font-size: 18px; }
+.pl-guests .step-btn { width: 34px; height: 34px; }
+.pl-guests .step-btn .ic { width: 16px; height: 16px; }
 .clear-x {
   display: grid; place-items: center; width: 28px; height: 28px; flex: none; border-radius: 50%; border: 0;
   background: var(--surface-2); color: var(--muted);
@@ -851,9 +857,9 @@ dialog.modal::backdrop { background: rgba(43, 34, 48, .4); backdrop-filter: blur
         <label for="fGroup">Guests</label>
         <div class="pl-input">
           <i data-ic="users"></i>
-          <button type="button" class="step-btn" data-step="-1" aria-label="Fewer guests">−</button>
+          <button type="button" class="step-btn" data-step="-1" aria-label="Fewer guests"><i data-ic="minus"></i></button>
           <input id="fGroup" autocomplete="wtfa-no-autofill" data-f="group" type="number" min="1" max="99" inputmode="numeric" placeholder="Any">
-          <button type="button" class="step-btn" data-step="1" aria-label="More guests">+</button>
+          <button type="button" class="step-btn" data-step="1" aria-label="More guests"><i data-ic="plus"></i></button>
         </div>
       </div>
     </div>
@@ -1187,9 +1193,9 @@ dialog.modal::backdrop { background: rgba(43, 34, 48, .4); backdrop-filter: blur
           <div class="field">
             <label for="eGroup">Largest group that fits comfortably</label>
             <div class="stepper">
-              <button type="button" class="step-btn" data-estep="-1" aria-label="Smaller group">−</button>
+              <button type="button" class="step-btn" data-estep="-1" aria-label="Smaller group"><i data-ic="minus"></i></button>
               <input id="eGroup" autocomplete="wtfa-no-autofill" name="max_group_size" class="input" type="number" min="1" max="200" inputmode="numeric" placeholder="—">
-              <button type="button" class="step-btn" data-estep="1" aria-label="Larger group">+</button>
+              <button type="button" class="step-btn" data-estep="1" aria-label="Larger group"><i data-ic="plus"></i></button>
             </div>
           </div>
           <div class="field">
@@ -1396,6 +1402,7 @@ dialog.modal::backdrop { background: rgba(43, 34, 48, .4); backdrop-filter: blur
     sliders: '<path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/>',
     search: '<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>',
     plus: '<path d="M12 5v14M5 12h14"/>',
+    minus: '<path d="M5 12h14"/>',
     x: '<path d="M18 6 6 18M6 6l12 12"/>',
     star: '<path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>',
     heart: '<path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>',
@@ -2264,16 +2271,36 @@ dialog.modal::backdrop { background: rgba(43, 34, 48, .4); backdrop-filter: blur
   // ══════════════════════════════════════════════════════════
   // Filtering
   // ══════════════════════════════════════════════════════════
+  // Address words written either way ("King Street" / "King St", "Mount" / "Mt") are compared in their short form.
+  const ADDR_SHORT = {
+    street: "st", saint: "st", avenue: "ave", av: "ave", road: "rd", drive: "dr", lane: "ln", court: "ct",
+    crescent: "cres", cr: "cres", place: "pl", parade: "pde", highway: "hwy", terrace: "tce", boulevard: "blvd",
+    close: "cl", circuit: "cct", square: "sq", esplanade: "esp", grove: "gr", mount: "mt", north: "nth", south: "sth",
+  };
+  const ADDR_LONG = Object.keys(ADDR_SHORT).filter((w) => w.length > 3);
+  const normAddr = (s) => norm(String(s ?? "").replace(/[.,/#-]/g, " ")).split(" ").map((w) => ADDR_SHORT[w] || w).join(" ");
+  // A query word still being typed ("King Stre") also matches the short form of the word it starts.
+  const addrTokenAlts = (t, last) => {
+    const alts = [t];
+    if (last && t.length >= 3 && !ADDR_SHORT[t]) ADDR_LONG.forEach((w) => { if (w.startsWith(t)) alts.push(ADDR_SHORT[w]); });
+    return alts;
+  };
+  function addrPhraseIn(hay, toks) {
+    if (!hay) return false;
+    const fixed = toks.slice(0, -1).join(" ");
+    return addrTokenAlts(toks[toks.length - 1], true).some((t) => hay.includes(fixed ? `${fixed} ${t}` : t));
+  }
   function areaScore(p, q) {
-    const nq = norm(q);
+    const nq = normAddr(q);
     if (!nq) return 1;
-    const pc = norm(p.postcode), sub = norm(p.suburb), st = norm(p.street);
+    const pc = norm(p.postcode), sub = normAddr(p.suburb), st = normAddr(p.street);
     if (/^\d{3,4}$/.test(nq)) return pc.startsWith(nq) ? (pc === nq ? 4 : 3) : 0;
+    const toks = nq.split(" ");
     if (sub && sub === nq) return 4;
     if (sub && sub.startsWith(nq)) return 3;
-    if (st && st.includes(nq)) return 2.5;
-    const full = norm([p.street, p.suburb, p.state, p.postcode].filter(Boolean).join(" "));
-    if (full && nq.split(" ").every((t) => full.includes(t))) return 2;
+    if (addrPhraseIn(st, toks)) return 2.5;
+    const full = normAddr([p.street, p.suburb, p.state, p.postcode].filter(Boolean).join(" "));
+    if (full && toks.every((t, i) => addrTokenAlts(t, i === toks.length - 1).some((a) => full.includes(a)))) return 2;
     return 0;
   }
   function textMatch(p, q) {
