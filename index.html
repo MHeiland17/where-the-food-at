@@ -3277,10 +3277,11 @@ dialog.modal::backdrop { background: rgba(43, 34, 48, .4); backdrop-filter: blur
   const CATEGORY_RULES = [
     [/^(pub|irish_pub)$/, "pub"],
     [/^(bar|wine_bar|cocktail_bar|lounge_bar|sports_bar|night_club|beer_hall|brewpub)$/, "bar"],
-    [/(cafe|coffee_shop|tea_house|cafeteria|juice_shop)/, "cafe"],
+    // Google files many Australian brunch cafés as diners or breakfast/brunch restaurants.
+    [/(cafe|coffee_shop|tea_house|cafeteria|juice_shop|diner|breakfast|brunch)/, "cafe"],
     [/(bakery|pastry|donut|bagel|dessert_shop)/, "bakery"],
     [/(meal_takeaway|fast_food)/, "takeaway"],
-    [/(restaurant|food_court|diner|bistro|steak_house|pizzeria|brunch|breakfast)/, "restaurant"],
+    [/(restaurant|food_court|bistro|steak_house|pizzeria)/, "restaurant"],
   ];
   function mapCategory(primary, types = []) {
     for (const t of [primary, ...types].filter(Boolean)) {
@@ -3325,7 +3326,7 @@ dialog.modal::backdrop { background: rgba(43, 34, 48, .4); backdrop-filter: blur
     const website = g.websiteUri || null;
     const category = mapCategory(g.primaryType, g.types);
     // Google's place type often names the cuisine (chinese_restaurant → Chinese).
-    const cuisineType = [g.primaryType, ...(g.types || [])].find((t) => /^[a-z_]+_restaurant$/.test(t || "") && t !== "fast_food_restaurant");
+    const cuisineType = [g.primaryType, ...(g.types || [])].find((t) => /^[a-z_]+_restaurant$/.test(t || "") && !/^(fast_food|breakfast|brunch)_restaurant$/.test(t));
     const cuisine = cuisineType ? cap(cuisineType.replace(/_restaurant$/, "").replace(/_/g, " ")) : null;
     // Google's API has no "Food at bar" field, so for bars look for any other sign of food.
     const foodSignal = g.servesDessert === true || g.servesVegetarianFood === true
@@ -3348,8 +3349,8 @@ dialog.modal::backdrop { background: rgba(43, 34, 48, .4); backdrop-filter: blur
       delivery: typeof g.delivery === "boolean" ? g.delivery : null,
       takeaway: typeof g.takeout === "boolean" ? g.takeout : null,
       // Google only says *whether* a place takes reservations, not how, and gives no booking link.
-      // So "Book online" is never guessed: bookings + a phone number means "call to book".
-      booking_method: g.reservable === true ? (phone ? "phone" : null) : g.reservable === false ? "walk_in" : null,
+      // So the method is never guessed: "takes bookings" leaves it as "Not sure".
+      booking_method: g.reservable === false ? "walk_in" : null,
       public_rating: typeof g.rating === "number" ? Math.round(g.rating * 10) / 10 : null,
       parking_ease: mapParking(g.parkingOptions),
     };
@@ -3448,6 +3449,12 @@ dialog.modal::backdrop { background: rgba(43, 34, 48, .4); backdrop-filter: blur
         primaryType: "cocktail_bar", types: ["cocktail_bar", "bar"], nationalPhoneNumber: "(03) 9000 7777", priceLevel: "PRICE_LEVEL_MODERATE", rating: 4.4,
         servesCocktails: true, servesWine: true, reservable: true,
         regularOpeningHours: { periods: [3, 4, 5, 6, 0].map((d) => span(d, "16:00", d === 0 ? "22:00" : "01:00")) } },
+      { id: "demo_sunny_side_diner_04", displayName: { text: "Sunny Side Diner" }, formattedAddress: "21 High St, Northcote VIC 3070",
+        addressComponents: addr("21", "High Street", "High St", "Northcote", "Victoria", "VIC", "3070"),
+        primaryType: "diner", types: ["diner", "breakfast_restaurant", "restaurant", "food"],
+        nationalPhoneNumber: "(03) 9000 4444", websiteUri: "https://example.com/sunnyside", priceLevel: "PRICE_LEVEL_MODERATE", rating: 4.7,
+        servesBreakfast: true, servesBrunch: true, servesLunch: true, takeout: true, reservable: true,
+        regularOpeningHours: { periods: [2, 3, 4, 5, 6, 0].map((d) => span(d, "07:30", "15:00")) } },
     ];
     return new Promise((resolve, reject) => setTimeout(() => {
       if (body.action === "search") {
